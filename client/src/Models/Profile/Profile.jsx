@@ -19,7 +19,7 @@ const Profile = () => {
     });
 
     const userData = user?.user || user;
-    const isVendor = userData?.role === 'vendor';
+    const isVendor = userData?.role === 'seller';
 
     const handleLogout = () => {
         dispatch(logout());
