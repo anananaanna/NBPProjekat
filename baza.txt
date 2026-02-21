@@ -1,0 +1,82 @@
+// BRISANJE SVEGA (Opciono - koristi samo ako želiš čistu bazu)
+MATCH (n) DETACH DELETE n;
+
+// KREIRANJE PRODAVCA
+CREATE (v:User {username: 'Vendor', email: 'vendor@gmail.com', password: 'vendor123', role: 'seller'})
+
+// KREIRANJE KUPACA
+CREATE (u1:User {username: 'Anastasija', email: 'anastasija@gmail.com', password: 'anastasija123', role: 'customer'})
+CREATE (u2:User {username: 'Tijana', email: 'tijana@gmail.com', password: 'tijana123', role: 'customer'})
+CREATE (u3:User {username: 'Jovana', email: 'jovana@gmail.com', password: 'jovana123', role: 'customer'})
+CREATE (u4:User {username: 'Andjela', email: 'andjela@gmail.com', password: 'andjela123', role: 'customer'})
+CREATE (u5:User {username: 'Marija', email: 'marija@gmail.com', password: 'marija123', role: 'customer'})
+
+// KREIRANJE KATEGORIJA
+CREATE (c1:Category {name: 'Namestaj', description: 'Sve za vas dom'})
+CREATE (c2:Category {name: 'Dekoracija', description: 'Sitnice koje znace'})
+CREATE (c3:Category {name: 'Elektronika', description: 'Tehnika i aparati'})
+CREATE (c4:Category {name: 'Mobilni uredjaji', description: 'Telefoni i tableti'})
+CREATE (c5:Category {name: 'Odeca', description: 'Modni trendovi'})
+CREATE (c6:Category {name: 'Obuca', description: 'Udoban korak'})
+CREATE (c7:Category {name: 'Aksesoari', description: 'Dodaci stilu'})
+CREATE (c8:Category {name: 'Pice', description: 'Osvezenje'})
+CREATE (c9:Category {name: 'Hrana', description: 'Namirnice'})
+
+// KREIRANJE PRODAVNICA I VEZA SA PRODAVCEM
+MATCH (v:User {username: 'Vendor'})
+CREATE (s1:Store {name: 'HomeDecor', address: 'Vizantijska 2', city: 'Beograd', logo: 'stores/HomeDecor.jpeg', workingHours: '09:00-21:00'})
+CREATE (s2:Store {name: 'TechZone', address: 'Nevesinjska 5', city: 'Leskovac', logo: 'stores/TechZone.png', workingHours: '09:00-20:00'})
+CREATE (s3:Store {name: 'Urban Style', address: 'Carnojevica 4', city: 'Nis', logo: 'stores/UrbanStyle.png', workingHours: '10:00-22:00'})
+CREATE (s4:Store {name: 'Costco', address: 'Milovana Krstica 17', city: 'Beograd', logo: 'stores/Costco.png', workingHours: '00:00-24:00'})
+CREATE (v)-[:OWNS_STORE]->(s1), (v)-[:OWNS_STORE]->(s2), (v)-[:OWNS_STORE]->(s3), (v)-[:OWNS_STORE]->(s4)
+
+// HOME DECOR PROIZVODI
+MATCH (s:Store {name: 'HomeDecor'}), (catN:Category {name: 'Namestaj'}), (catD:Category {name: 'Dekoracija'}), (catE:Category {name: 'Elektronika'})
+CREATE (p1:Product {name: 'Sofa', brand: 'Ikea', price: 24999, image: 'products/SofaHomeDecor.jpeg'})-[:BELONGS_TO]->(catN), (s)-[:HAS_PRODUCT]->(p1)
+CREATE (p2:Product {name: 'Bastenski namestaj', brand: 'Ikea', price: 13499, image: 'products/BastenskiHomeDecor.jpeg'})-[:BELONGS_TO]->(catN), (s)-[:HAS_PRODUCT]->(p2)
+CREATE (p3:Product {name: 'Ogledalo', brand: 'Ikea', price: 18999, image: 'products/OgledaloHomeDecor.png'})-[:BELONGS_TO]->(catD), (s)-[:HAS_PRODUCT]->(p3)
+CREATE (p4:Product {name: 'USB C kabl', brand: 'Pepco', price: 399, image: 'products/USBHomeDecor.jpg'})-[:BELONGS_TO]->(catE), (s)-[:HAS_PRODUCT]->(p4)
+
+// TECH ZONE PROIZVODI
+MATCH (s:Store {name: 'TechZone'}), (catM:Category {name: 'Mobilni uredjaji'}), (catE:Category {name: 'Elektronika'})
+CREATE (p5:Product {name: 'Galaxy S22', brand: 'Samsung', price: 104999, image: 'products/GalaxySamsung.webp'})-[:BELONGS_TO]->(catM), (s)-[:HAS_PRODUCT]->(p5)
+CREATE (p6:Product {name: 'Redmi', brand: 'Xiaomi', price: 13999, image: 'products/RedmiXiaomi.webp'})-[:BELONGS_TO]->(catM), (s)-[:HAS_PRODUCT]->(p6)
+CREATE (p7:Product {name: 'Klima', brand: 'Tesla', price: 28999, image: 'products/KlimaTesla.webp'})-[:BELONGS_TO]->(catE), (s)-[:HAS_PRODUCT]->(p7)
+CREATE (p8:Product {name: 'Pegla', brand: 'Tesla', price: 4999, image: 'products/PeglaTesla.webp'})-[:BELONGS_TO]->(catE), (s)-[:HAS_PRODUCT]->(p8)
+
+// URBAN STYLE PROIZVODI
+MATCH (s:Store {name: 'Urban Style'}), (catO:Category {name: 'Odeca'}), (catOb:Category {name: 'Obuca'}), (catA:Category {name: 'Aksesoari'})
+CREATE (p9:Product {name: 'Bunda', brand: 'Bershka', price: 3499, image: 'products/Bunda.jpeg'})-[:BELONGS_TO]->(catO), (s)-[:HAS_PRODUCT]->(p9)
+CREATE (p10:Product {name: 'Farmerice', brand: 'Bershka', price: 2399, image: 'products/FarmericeBershka.jpeg'})-[:BELONGS_TO]->(catO), (s)-[:HAS_PRODUCT]->(p10)
+CREATE (p11:Product {name: 'Haljina', brand: 'Zara', price: 3299, image: 'products/Haljina.jpeg'})-[:BELONGS_TO]->(catO), (s)-[:HAS_PRODUCT]->(p11)
+CREATE (p12:Product {name: 'Torbica', brand: 'Bershka', price: 1699, image: 'products/torbica.jpeg'})-[:BELONGS_TO]->(catA), (s)-[:HAS_PRODUCT]->(p12)
+CREATE (p13:Product {name: 'Cizme', brand: 'Zara', price: 3399, image: 'products/cizme.jpeg'})-[:BELONGS_TO]->(catOb), (s)-[:HAS_PRODUCT]->(p13)
+
+// COSTCO PROIZVODI
+MATCH (s:Store {name: 'Costco'}), (catP:Category {name: 'Pice'}), (catH:Category {name: 'Hrana'})
+CREATE (p14:Product {name: 'Ledeni caj', brand: 'JanaTea', price: 159, image: 'products/Ledenicaj.jpeg'})-[:BELONGS_TO]->(catP), (s)-[:HAS_PRODUCT]->(p14)
+CREATE (p15:Product {name: 'Coca Cola Zero', brand: 'Coca Cola', price: 180, image: 'products/ColaZero.jpeg'})-[:BELONGS_TO]->(catP), (s)-[:HAS_PRODUCT]->(p15)
+CREATE (p16:Product {name: 'Domacinski', brand: 'Chipsy', price: 220, image: 'products/Domacinski.jpeg'})-[:BELONGS_TO]->(catH), (s)-[:HAS_PRODUCT]->(p16)
+
+// WISHLIST (Kupci dodaju proizvode)
+MATCH (a:User {username: 'Anastasija'}), (t:User {username: 'Tijana'}), (j:User {username: 'Jovana'})
+MATCH (p1:Product {name: 'Galaxy S22'}), (p2:Product {name: 'Sofa'}), (p3:Product {name: 'Haljina'}), (p4:Product {name: 'Torbica'})
+CREATE (a)-[:INTERESTED_IN]->(p1), (a)-[:INTERESTED_IN]->(p2)
+CREATE (t)-[:INTERESTED_IN]->(p1), (t)-[:INTERESTED_IN]->(p3) // Anastasija i Tijana obe vole Galaxy (Collaborative filtering!)
+CREATE (j)-[:INTERESTED_IN]->(p4)
+
+// FOLLOW (Praćenje prodavnica)
+MATCH (a:User {username: 'Anastasija'}), (t:User {username: 'Tijana'}), (s:Store {name: 'Urban Style'}), (s2:Store {name: 'TechZone'})
+CREATE (a)-[:FOLLOWS]->(s), (a)-[:FOLLOWS]->(s2)
+CREATE (t)-[:FOLLOWS]->(s)
+
+// RATING & REVIEWS (Recenzije)
+MATCH (a:User {username: 'Anastasija'}), (s:Store {name: 'Urban Style'})
+CREATE (a)-[:RATED {score: 5, comment: 'Sjajna odeća!'}]->(s)
+
+MATCH (t:User {username: 'Tijana'}), (s:Store {name: 'TechZone'})
+CREATE (t)-[:RATED {score: 4, comment: 'Dobar izbor telefona.'}]->(s)
+
+// POPUSTI (Setovanje discount polja)
+MATCH (p:Product) WHERE p.name IN ['Galaxy S22', 'Bunda']
+SET p.discountPrice = p.price * 0.8  // 20% popusta

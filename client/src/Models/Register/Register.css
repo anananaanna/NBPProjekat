@@ -1,0 +1,143 @@
+.register-page-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #fff;
+    padding: 20px;
+}
+
+.register-minimal-box {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeInSlide 0.7s ease-out;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.register-heading {
+    font-size: 26px;
+    font-weight: 500;
+    margin-bottom: 40px;
+    color: #000;
+    text-align: center;
+    letter-spacing: 0.5px;
+}
+
+.register-form-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Input polja */
+.input-field-minimal {
+    position: relative;
+}
+
+.input-field-minimal input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 0;
+    font-size: 15px;
+    outline: none;
+    background: transparent;
+    transition: all 0.3s;
+}
+
+.input-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background-color: #000;
+    transition: width 0.3s ease-in-out;
+}
+
+.input-field-minimal input:focus ~ .input-underline {
+    width: 100%;
+}
+
+/* Role Selector Stil */
+.role-selection-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.role-selection-minimal label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+.role-selection-minimal select {
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    background: transparent;
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Dugme */
+.register-black-btn {
+    margin-top: 20px;
+    padding: 18px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.register-black-btn:hover {
+    background-color: #222;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* Redirect sekcija */
+.register-redirect-area {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.register-redirect-area p {
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.login-text-link {
+    background: none;
+    border: none;
+    color: #000;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.login-text-link:hover {
+    opacity: 0.6;
+}
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}

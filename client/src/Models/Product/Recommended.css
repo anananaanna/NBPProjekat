@@ -1,0 +1,129 @@
+/* Recommended.css */
+
+.recommended-page {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding-bottom: 80px;
+    font-family: 'Inter', sans-serif;
+}
+
+.recommended-hero {
+    padding: 50px 20px;
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.recommended-hero h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+    text-transform: none; /* Da ne bude sve velika slova ako ne želiš */
+}
+
+.recommended-hero p {
+    font-size: 16px;
+    color: #4a5568;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.recommended-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.recommended-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+/* Paginacija Stilovi */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 40px;
+}
+
+.pagination button {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #000;
+    font-weight: 600;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination button.active {
+    border-bottom: 2px solid #000; /* Samo linija ispod aktivnog broja */
+}
+
+.pagination button:hover {
+    color: #666;
+}
+
+/* Explore More Sekcija */
+.explore-more-container {
+    text-align: center;
+    margin-top: 50px;
+    padding-top: 30px;
+}
+
+.explore-btn {
+    background-color: black; /* Potpuno crno */
+    color: white; /* Beli tekst */
+    border: none;
+    padding: 12px 40px; /* Dugačko dugme */
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase; /* Sva velika slova kao na slici */
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 0; /* Oštre ivice, nema zaobljenja */
+    width: auto;
+    min-width: 200px;
+    transition: background-color 0.2s ease;
+}
+
+.explore-btn:hover {
+    background-color: #333; /* Tamno siva na hover */
+}
+
+/* Loader */
+.loading-box {
+    text-align: center;
+    padding: 100px 0;
+}
+
+.loading-spinner {
+    width: 45px;
+    height: 45px;
+    border: 3px solid #edf2f7;
+    border-top: 3px solid #00d1b2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-recommendations {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 60px;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid #edf2f7;
+}

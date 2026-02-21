@@ -1,0 +1,64 @@
+/* Osnovni stilovi za celu aplikaciju */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+/* Flexbox kontejner koji drži sve na ekranu */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Zauzima bar celu visinu ekrana */
+}
+
+/* Main se širi i gura footer na dno */
+.main-content {
+    flex: 1;
+    width: 100%;
+    max-width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* FOOTER DIZAJN */
+.global-footer {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 40px 20px;
+    margin-top: auto; /* Osigurava da je na dnu */
+    border-top: 3px solid #00d1b2;
+}
+
+.footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00d1b2;
+    margin-bottom: 10px;
+}
+
+.global-footer p {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+/* Loader stil za učitavanje */
+.loader {
+    text-align: center;
+    padding: 100px 0;
+    font-size: 20px;
+    color: #00d1b2;
+    font-weight: bold;
+}

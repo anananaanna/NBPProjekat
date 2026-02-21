@@ -1,0 +1,208 @@
+.profile-minimal-wrapper {
+    display: flex;
+    justify-content: center;
+    min-height: 90vh;
+    background-color: #fff;
+    padding-top: 80px;
+}
+
+.profile-content-container {
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+    animation: fadeInProfile 0.6s ease-out;
+}
+
+@keyframes fadeInProfile {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.minimal-avatar {
+    width: 70px;
+    height: 70px;
+    background-color: #f0f0f0;
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 20px;
+    font-size: 24px;
+    font-weight: 300;
+    border: 1px solid #eee;
+}
+
+.profile-username {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.profile-email {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.profile-role-tag {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #999;
+    border: 1px solid #eee;
+    padding: 4px 12px;
+    border-radius: 2px;
+}
+
+/* Dugmad */
+.profile-actions-main {
+    margin: 40px 0;
+}
+
+.black-action-btn {
+    width: 100%;
+    padding: 18px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.black-action-btn:hover {
+    background-color: #333;
+}
+
+/* Footer Linkovi */
+.profile-footer-nav {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 20px;
+}
+
+.text-toggle-btn, .text-logout-btn {
+    background: none;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.text-toggle-btn:hover, .text-logout-btn:hover {
+    color: #000;
+    text-decoration: underline;
+}
+
+/* Settings Forma */
+.settings-section-minimal {
+    margin-top: 50px;
+    text-align: left;
+    animation: fadeInSettings 0.4s ease;
+}
+
+@keyframes fadeInSettings {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.settings-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 30px;
+}
+
+.settings-form-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+.input-field-minimal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-field-minimal label {
+    font-size: 12px;
+    color: #aaa;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.input-field-minimal input {
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 8px 0;
+    font-size: 15px;
+    outline: none;
+    background: transparent;
+}
+
+.input-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background-color: #000;
+    transition: width 0.3s ease;
+}
+
+.input-field-minimal input:focus ~ .input-underline {
+    width: 100%;
+}
+
+.save-black-btn {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 1px;
+}
+
+.password-separator {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: #ccc;
+    margin: 20px 0 10px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+}
+
+.password-field {
+    position: relative;
+}
+
+.eye-btn {
+    position: absolute;
+    right: 0;
+    bottom: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    color: #888;
+    z-index: 10;
+}
+
+.eye-btn:hover {
+    color: #000;
+}
+
+/* Onemogući selekciju teksta na eye dugmetu da ne bi smetalo dok se drži */
+.eye-btn {
+    user-select: none;
+}

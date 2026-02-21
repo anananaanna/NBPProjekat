@@ -1,0 +1,75 @@
+.product-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 10px;
+    width: 200px;
+    text-align: center;
+    background: white;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+}
+
+.price {
+    font-weight: bold;
+    color: #28a745;
+    margin: 10px 0;
+}
+
+.add-btn {
+    background-color: #ffc107;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Kontejner za cene da budu u istoj liniji */
+.price-container {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+/* Nova, snižena cena */
+.sale-price {
+    font-weight: bold;
+    color: #d9534f; /* Crvena boja za popust */
+    font-size: 1.2rem;
+}
+
+/* Stara, precrtana cena */
+.old-price {
+    color: #888;
+    text-decoration: line-through;
+    font-size: 0.9rem;
+}
+
+/* Markica (Badge) na slici */
+.sale-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #ff4757;
+    color: white;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 5px;
+    text-transform: uppercase;
+    z-index: 10;
+}
+
+/* Pozicioniranje za sliku da bi badge radio */
+.image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+/* Hover efekat za samu karticu */
+.product-card:hover {
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}

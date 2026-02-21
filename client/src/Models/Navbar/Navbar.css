@@ -1,0 +1,287 @@
+/* Glavni kontejner */
+.main-navbar {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 0 40px;
+}
+
+/* Gornji nivo */
+.nav-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 90px; /* Malo viši za bolji balans */
+}
+
+.nav-top-left, .nav-top-right {
+    flex: 1; /* Ovo gura logo tačno u sredinu */
+    display: flex;
+    align-items: center;
+}
+
+.nav-top-right {
+    justify-content: flex-end;
+    gap: 30px; /* Razmak između samih ikonica */
+}
+
+/* Logo - centriran i velik */
+.nav-top-center {
+    flex: 0; /* Ne širi se, ostaje onoliki koliki je logo */
+    text-align: center;
+}
+
+.logo-text {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: 6px;
+    color: #000;
+    cursor: pointer;
+    margin: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Desna strana - Ikonice i tekst */
+
+
+.auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.auth-section:hover {
+    opacity: 0.7;
+}
+
+.auth-section .icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+.auth-text {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* Donji nivo - Navigacija */
+.nav-bottom {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 1.5px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.nav-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #000;
+    transition: width 0.3s;
+}
+
+.nav-btn:hover::after {
+    width: 100%;
+}
+
+.nav-btn.highlight {
+    color: #ff3b30; /* Crvena boja za "SNIŽENO" */
+}
+
+/* Notifikacije i Zvonce */
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    position: relative;
+}
+
+.badge-dot {
+    position: absolute;
+    top: -2px;
+    right: -5px;
+    background: #ff3b30;
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 1px solid white;
+}
+
+/* Dropdown prilagođen novom stilu */
+.notif-dropdown {
+    position: absolute;
+    top: 30px; /* POVEĆANO sa 45px na 70px da bi izlazilo niže */
+    right: 0;
+    width: 300px;
+    background: white;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12); /* Malo dublja senka za bolji efekat */
+    border-radius: 4px;
+    border: 1px solid #eee;
+    z-index: 2000;
+    padding: 10px 0;
+}
+
+.notif-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 12px;
+    width: 12px;
+    height: 12px;
+    background: white;
+    transform: rotate(45deg);
+    border-left: 1px solid #eee;
+    border-top: 1px solid #eee;
+}
+
+.nav-icon-only {
+    position: relative; /* OVO JE KLJUČNO da dropdown zna odakle da meri 70px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #000;
+    transition: opacity 0.2s;
+    height: 100%;
+}
+
+/* Animacija za sakrivanje navbara */
+.main-navbar {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+    padding: 0 50px; /* Malo veći padding sa strana */
+}
+
+.main-navbar.hidden {
+    transform: translateY(-100%); /* Pomera navbar skroz gore van ekrana */
+}
+
+.main-navbar.visible {
+    transform: translateY(0);
+}
+
+/* Stil za ikonice i labelice */
+.nav-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    min-width: 60px;
+    position: relative;
+    color: #000;
+}
+
+.icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.icon-wrapper svg {
+    transition: transform 0.2s ease;
+}
+
+.nav-icon-item:hover svg {
+    transform: scale(1.1);
+}
+
+.icon-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 400;
+}
+
+/* Badge za notifikacije - stilizovan kao na slici */
+.badge-count {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    background: #000; /* Crni krug sa belim brojem, minimalistički */
+    color: #fff;
+    font-size: 9px;
+    font-weight: bold;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Redizajnirana "SNIŽENO" dugmad u donjem delu */
+.nav-btn.highlight {
+    color: #d10000;
+    font-weight: 600;
+}
+
+.nav-icon-only {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #000;
+    transition: opacity 0.2s;
+    height: 100%; /* Da bi se centrirale po visini */
+}
+
+.nav-icon-only:hover {
+    opacity: 0.6;
+}
+
+.nav-links-container {
+    display: flex;
+    justify-content: center;
+    gap: 60px; /* Ravnomerni razmak između dugmadi */
+    width: auto;
+}
+
+.badge-dot-small {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 7px;
+    height: 7px;
+    background: #000;
+    border-radius: 50%;
+}
+
+.hidden { transform: translateY(-100%); }
+.visible { transform: translateY(0); }

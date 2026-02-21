@@ -1,0 +1,125 @@
+.manage-wrapper-minimal {
+    display: flex;
+    justify-content: center;
+    background-color: #fff;
+    min-height: 100vh;
+    padding: 80px 20px;
+}
+
+.manage-content-minimal {
+    width: 100%;
+    max-width: 600px;
+    animation: fadeIn 0.5s ease;
+}
+
+.manage-header-minimal {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 50px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+}
+
+.manage-header-minimal h2 {
+    font-size: 22px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.btn-text:hover {
+    color: #000;
+}
+
+/* Sekcije forme */
+.form-section-minimal {
+    margin-bottom: 60px;
+}
+
+.form-section-minimal h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #aaa;
+    margin-bottom: 30px;
+}
+
+/* Discount box (Popust) */
+.discount-box {
+    background-color: #fafafa;
+    padding: 30px;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Danger Zone (Brisanje) */
+.danger-zone-minimal {
+    margin-top: 100px;
+    padding-top: 30px;
+    border-top: 1px dashed #ddd;
+    text-align: center;
+}
+
+.btn-outline-red {
+    background: transparent;
+    border: 1px solid #ff3860;
+    color: #ff3860;
+    padding: 12px 25px;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-outline-red:hover {
+    background: #ff3860;
+    color: #fff;
+}
+
+.btn-text-red {
+    background: none;
+    border: none;
+    color: #ff3860;
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+/* Labela iznad inputa u ManageProduct */
+.input-underlined label {
+    font-size: 11px;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+/* Malo crno dugme za popuste */
+.btn-black-small {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

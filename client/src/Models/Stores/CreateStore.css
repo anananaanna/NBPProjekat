@@ -1,0 +1,134 @@
+/* Kontejner prati stil auth formi (Login/Register) */
+.auth-container-minimal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #ffffff;
+    padding: 20px;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.auth-title {
+    font-size: 24px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.auth-form-minimal {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Stil za inpute sa donjom linijom */
+.input-underlined {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-underlined input {
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 0;
+    font-size: 16px;
+    outline: none;
+    background: transparent;
+    transition: 0.3s;
+}
+
+.input-underlined .line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background-color: #000;
+    transition: width 0.3s ease;
+}
+
+.input-underlined input:focus ~ .line {
+    width: 100%;
+}
+
+/* File input deo */
+.file-input-wrapper {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.file-input-wrapper label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 1px;
+}
+
+.file-input-wrapper input[type="file"] {
+    font-size: 13px;
+    color: #555;
+}
+
+/* Glavno crno dugme */
+.btn-black-wide {
+    margin-top: 20px;
+    padding: 18px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-black-wide:hover {
+    background-color: #333;
+    transform: translateY(-2px);
+}
+
+.close-create-store {
+    position: absolute;
+    top: -40px; /* Pozicionira ga iznad naslova */
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #000;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-create-store:hover {
+    transform: scale(1.1);
+    opacity: 0.7;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .close-create-store {
+        top: -30px;
+        right: 10px;
+    }
+}
