@@ -13,8 +13,7 @@ Bash
 npm install
 Kreirajte .env fajl u korenu backend-a i popunite svoje podatke:
 
-Фрагмент кода
-PORT=3001
+PORT=3001gi
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=vasa_lozinka
@@ -40,8 +39,8 @@ Pokrenite aplikaciju:
 
 Bash
 npm start
-Baza Podataka (Seed Script)
-U korenu projekta nalazi se fajl db_seed.cypher. Potrebno je kopirati sadržaj tog fajla u Neo4j Browser i pokrenuti ga. To će kreirati:
+Baza Podataka
+U korenu projekta nalazi se fajl baza.txt. Potrebno je kopirati sadržaj tog fajla u Neo4j Browser i pokrenuti ga. To će kreirati:
 
 Korisnike: Prodavac (Vendor) i 5 kupaca.
 
@@ -69,12 +68,13 @@ npm install multer path
 
 # Instalacija za real-time notifikacije (Socket.io)
 npm install socket.io
+
 2. Instalacija u FRONTEND folderu
 Otvori novi terminal (ili ugasi prethodni), uđi u frontend folder i kucaj:
 
 Bash
 # Ulazak u folder
-cd frontend
+cd client
 
 # Instalacija React Router-a za navigaciju
 npm install react-router-dom
@@ -87,3 +87,15 @@ npm install socket.io-client
 
 # Instalacija ikonica (ako ih koristiš, npr. Lucide)
 npm install lucide-react
+
+Aplikacija je izgrađena na modernom sistemu koji kombinuje prednosti grafovske baze, brzog keširanja i komunikacije u realnom vremenu.
+
+Logika preporuka (Collaborative Filtering): Algoritam "Preporučeno za vas" ne prikazuje nasumične proizvode. Sistem prati korisnike koji u listi želja (WISHES) imaju iste proizvode. Ako korisnik A i korisnik B oboje žele "Galaxy S22", sistem korisniku A preporučuje ostale artikle iz liste želja korisnika B (npr. "Farmerice"), jer graf sugeriše da imaju sličan ukus.
+
+Top 3 Prodavnice: Na početnoj strani se prikazuju 3 najpopularnije prodavnice. Popularnost se računa u Neo4j (kombinacija ocene i broja pratilaca), ali se rezultat čuva u Redisu. Time se izbegava teško računanje pri svakom osvežavanju stranice.
+
+Keširanje kategorija: Lista kategorija se povlači iz Redisa, što ubrzava učitavanje prodavnice.
+
+Sistem omogućava trenutno obaveštavanje korisnika bez potrebe za osvežavanjem stranice.
+
+Notifikacije: Stižu kada neko zaprati prodavnicu, doda proizvod u listu želja ili kada prodavac stavi na popust artikal koji se nalazi u kupčevoj listi želja.
