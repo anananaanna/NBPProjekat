@@ -1,0 +1,89 @@
+Uputstvo za pokretanje projekta
+Korak 1: Priprema baza podataka
+Neo4j: Pokrenite Neo4j Desktop, kreirajte bazu i obavezno instalirajte APOC plugin (potreban za napredne upite).
+
+Redis: Osigurajte da je Redis server pokrenut (podrazumevani port 6379).
+
+Korak 2: Konfiguracija Backenda
+Uđite u backend folder.
+
+Pokrenite instalaciju svih zavisnosti:
+
+Bash
+npm install
+Kreirajte .env fajl u korenu backend-a i popunite svoje podatke:
+
+Фрагмент кода
+PORT=3001
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=vasa_lozinka
+REDIS_URL=redis://localhost:6379
+VAŽNO (Slike): Ukoliko ne postoje, ručno kreirajte foldere:
+
+backend/uploads/products
+
+backend/uploads/stores
+
+Pokrenite server:
+
+Bash
+npm start
+Korak 3: Konfiguracija Frontenda
+Uđite u frontend folder.
+
+Instalirajte sve pakete:
+
+Bash
+npm install
+Pokrenite aplikaciju:
+
+Bash
+npm start
+Baza Podataka (Seed Script)
+U korenu projekta nalazi se fajl db_seed.cypher. Potrebno je kopirati sadržaj tog fajla u Neo4j Browser i pokrenuti ga. To će kreirati:
+
+Korisnike: Prodavac (Vendor) i 5 kupaca.
+
+Prodavnice: HomeDecor, TechZone, Urban Style, Costco.
+
+Proizvode: Povezane sa kategorijama i prodavnicama.
+
+Relacije: Zapraćene prodavnice, wishliste i početne ocene kako bi algoritam za preporuke (Collaborative Filtering) mogao odmah da se testira.
+
+1. Instalacija u BACKEND folderu
+Otvori terminal, uđi u backend folder i kucaj ove komande jednu po jednu (ili sve odjednom):
+
+Bash
+# Ulazak u folder
+cd backend
+
+# Instalacija Express-a i osnovnih alata
+npm install express cors dotenv nodemon
+
+# Instalacija drajvera za baze podataka
+npm install neo4j-driver redis redis-om
+
+# Instalacija za upload slika i rad sa putanjama
+npm install multer path
+
+# Instalacija za real-time notifikacije (Socket.io)
+npm install socket.io
+2. Instalacija u FRONTEND folderu
+Otvori novi terminal (ili ugasi prethodni), uđi u frontend folder i kucaj:
+
+Bash
+# Ulazak u folder
+cd frontend
+
+# Instalacija React Router-a za navigaciju
+npm install react-router-dom
+
+# Instalacija Axios-a za komunikaciju sa API-jem
+npm install axios
+
+# Instalacija klijenta za notifikacije
+npm install socket.io-client
+
+# Instalacija ikonica (ako ih koristiš, npr. Lucide)
+npm install lucide-react
