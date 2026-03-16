@@ -31,7 +31,6 @@ const CreateStore = () => {
     return (
         <div className="auth-container-minimal">
             <div className="auth-box" style={{ position: 'relative' }}>
-                {/* DUGME X ZA POVRATAK */}
                 <button 
                     className="close-create-store" 
                     onClick={() => navigate('/vendor-dashboard')}

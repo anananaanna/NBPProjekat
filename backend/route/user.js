@@ -13,7 +13,6 @@ router.put('/update-profile', userController.updateUser);
 router.delete('/delete/:id', userController.deleteUser); 
 
 // Relacije (Sve koriste ID-jeve u Body-ju)
-router.post('/follow-category', userController.followCategory);
 router.post('/follow-store', userController.followStore);
 
 // Wishlist rute

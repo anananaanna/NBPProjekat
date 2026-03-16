@@ -1,7 +1,7 @@
 // 1. ČIŠĆENJE BAZE
 MATCH (n) DETACH DELETE n;
 
-// 2. KREIRANJE KORISNIKA (Lozinka: 123, tvoj heš)
+// 2. KREIRANJE KORISNIKA (Lozinka: lozinka123)
 CREATE (v:User {username: 'Vendor', email: 'vendor@gmail.com', password: '$2b$10$PTN3Pgrt7XYhSbrbbHD6B.5yCMMxqO.ne/LvmAhZFlQD7rim2nsLe', role: 'seller'})
 CREATE (u1:User {username: 'Anastasija', email: 'anastasija@gmail.com', password: '$2b$10$PTN3Pgrt7XYhSbrbbHD6B.5yCMMxqO.ne/LvmAhZFlQD7rim2nsLe', role: 'customer'})
 CREATE (u2:User {username: 'Tijana', email: 'tijana@gmail.com', password: '$2b$10$PTN3Pgrt7XYhSbrbbHD6B.5yCMMxqO.ne/LvmAhZFlQD7rim2nsLe', role: 'customer'})
@@ -20,11 +20,11 @@ CREATE (c9:Category {name: 'Hrana', description: 'Namirnice'})
 
 WITH v, u1, u2, u3, c1, c2, c3, c4, c5, c6, c7, c8, c9
 
-// 4. KREIRANJE PRODAVNICA (location format koji traži tvoj Store model)
-CREATE (s1:Store {name: 'HomeDecor', location: 'Vizantijska 2, Beograd', logo: 'stores/HomeDecor.jpeg', workingHours: '09:00-21:00'})
-CREATE (s2:Store {name: 'TechZone', location: 'Nevesinjska 5, Leskovac', logo: 'stores/TechZone.png', workingHours: '09:00-20:00'})
-CREATE (s3:Store {name: 'Urban Style', location: 'Carnojevica 4, Nis', logo: 'stores/UrbanStyle.png', workingHours: '10:00-22:00'})
-CREATE (s4:Store {name: 'Costco', location: 'Milovana Krstica 17, Beograd', logo: 'stores/Costco.png', workingHours: '00:00-24:00'})
+// 4. KREIRANJE PRODAVNICA 
+CREATE (s1:Store {name: 'HomeDecor', address: 'Vizantijska 2', city: 'Beograd', logo: 'stores/HomeDecor.jpeg', workingHours: '09:00-21:00'})
+CREATE (s2:Store {name: 'TechZone', address: 'Nevesinjska 5', city: 'Leskovac', logo: 'stores/TechZone.png', workingHours: '09:00-20:00'})
+CREATE (s3:Store {name: 'Urban Style', address: 'Carnojevica 4', city: 'Nis', logo: 'stores/UrbanStyle.png', workingHours: '10:00-22:00'})
+CREATE (s4:Store {name: 'Costco', address: 'Milovana Krstica 17', city: 'Beograd', logo: 'stores/Costco.png', workingHours: '00:00-24:00'})
 
 CREATE (v)-[:OWNS_STORE]->(s1), (v)-[:OWNS_STORE]->(s2), (v)-[:OWNS_STORE]->(s3), (v)-[:OWNS_STORE]->(s4)
 
@@ -34,7 +34,7 @@ CREATE (s2)-[:OFFERS_CATEGORY]->(c3), (s2)-[:OFFERS_CATEGORY]->(c4)
 CREATE (s3)-[:OFFERS_CATEGORY]->(c5), (s3)-[:OFFERS_CATEGORY]->(c6), (s3)-[:OFFERS_CATEGORY]->(c7)
 CREATE (s4)-[:OFFERS_CATEGORY]->(c8), (s4)-[:OFFERS_CATEGORY]->(c9)
 
-// 5. KREIRANJE PROIZVODA (Slike iz foldera koje si poslala)
+// 5. KREIRANJE PROIZVODA 
 // HomeDecor
 CREATE (p1:Product {name: 'Sofa', brand: 'Ikea', price: toFloat(24999), image: 'products/SofaHomeDecor.jpeg'})
 CREATE (s1)-[:HAS_PRODUCT]->(p1), (p1)-[:BELONGS_TO]->(c1)
@@ -75,10 +75,9 @@ CREATE (s4)-[:HAS_PRODUCT]->(p15), (p15)-[:BELONGS_TO]->(c8)
 CREATE (p16:Product {name: 'Domacinski', brand: 'Chipsy', price: toFloat(220), image: 'products/Domacinski.jpeg'})
 CREATE (s4)-[:HAS_PRODUCT]->(p16), (p16)-[:BELONGS_TO]->(c9)
 
-WITH u1, u2, u3, s1, s2, s3, s4, p5, p9
+WITH u1, u2, u3, s1, s2, s3, s4, p1, p5, p9, p6, p10
 
-// 6. REJTING (RATED) I KOMENTARI (COMMENTED) - Prema tvom kontroleru
-// Koristimo relaciju [:COMMENTED] sa text i date propertijima
+// 6. REJTING (RATED) I KOMENTARI (COMMENTED) 
 CREATE (u1)-[:RATED {score: 5}]->(s1)
 CREATE (u1)-[:COMMENTED {text: 'Sofa je preudobna, stigla je ranije nego sto sam ocekivala!', date: '2024-05-21T10:00:00.000Z'}]->(s1)
 
@@ -91,12 +90,20 @@ CREATE (u3)-[:COMMENTED {text: 'Urban Style ima najbolje bunde ove sezone, preza
 CREATE (u1)-[:RATED {score: 3}]->(s4)
 CREATE (u1)-[:COMMENTED {text: 'U Costco-u je uvek guzva, ali je ledeni caj odlican.', date: '2024-05-24T09:15:00.000Z'}]->(s4)
 
-// 7. OSTALE VEZE I POPUSTI
+// 7. FOLLOW
 CREATE (u1)-[:FOLLOWS]->(s1)
 CREATE (u1)-[:FOLLOWS]->(s2)
-CREATE (u1)-[:INTERESTED_IN]->(p5)
-CREATE (u2)-[:INTERESTED_IN]->(p9)
 
+// 8. WISHLIST
+CREATE (u1)-[:INTERESTED_IN]->(p5)
+CREATE (u1)-[:INTERESTED_IN]->(p6)
+CREATE (u2)-[:INTERESTED_IN]->(p5)
+CREATE (u2)-[:INTERESTED_IN]->(p9)
+CREATE (u2)-[:INTERESTED_IN]->(p1)
+CREATE (u3)-[:INTERESTED_IN]->(p1)
+CREATE (u3)-[:INTERESTED_IN]->(p10)
+
+// 9. POPUST
 WITH p5, p9
 MATCH (p:Product) WHERE p.name IN ['Galaxy S22', 'Bunda']
 SET p.discountPrice = toFloat(round(p.price * 0.8))

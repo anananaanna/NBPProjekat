@@ -9,7 +9,6 @@ const ProductList = () => {
         const fetchProducts = async () => {
             try {
                 const response = await productService.getAllProducts();
-                // response.data bi trebalo da bude niz proizvoda iz Neo4j
                 setProducts(response.data);
             } catch (err) {
                 console.error("Greška pri dohvatanju proizvoda:", err);

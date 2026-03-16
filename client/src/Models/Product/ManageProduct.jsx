@@ -32,7 +32,6 @@ const ManageProduct = () => {
     const handleBasicUpdate = async () => {
     try {
         const formData = new FormData();
-        // Uzimamo ID ispravno
         const productId = product.id?.low || product.id || id;
         
         formData.append('id', productId);
@@ -44,19 +43,17 @@ const ManageProduct = () => {
             formData.append('image', selectedFile);
         }
 
-        console.log("Šaljem podatke:", Object.fromEntries(formData)); // Ovo će ispisati u konzoli šta šalješ
+        console.log("Šaljem podatke:", Object.fromEntries(formData)); 
 
         await productService.updateProduct(formData);
         alert("Uspešno ažurirano!");
         window.location.reload();
     } catch (err) { 
-        // OVE DVE LINIJE SU KLJUČNE ZA DIJAGNOSTIKU:
         console.error("DETALJNA GREŠKA:", err.response?.data || err.message);
         alert("Greška: " + (err.response?.data?.error || err.message)); 
     }
 };
 
-    // LOGIKA ZA AKTIVIRANJE POPUSTA
     const handleDiscountUpdate = async () => {
         try {
             await productService.setDiscount({
@@ -71,7 +68,6 @@ const ManageProduct = () => {
         }
     };
 
-    // LOGIKA ZA UKLANJANJE POPUSTA
     const handleRemoveDiscount = async () => {
         if (!window.confirm(`Da li ste sigurni da želite da uklonite popust za ${product.name}?`)) return;
         try {

@@ -18,7 +18,6 @@ const Home = () => {
     const [sortBy, setSortBy] = useState('popularity');
     const [loading, setLoading] = useState(false);
     
-    // "Učitaj više" logika
     const [visibleCount, setVisibleCount] = useState(8);
     
     const navigate = useNavigate();
@@ -26,10 +25,8 @@ const Home = () => {
     const userData = user?.user || user;
     const userId = userData?.id || userData?._id;
 
-    // 1. Definišemo fetchTrending bez previše komplikovanja
     const fetchTrending = async () => {
         try {
-            // Dodajemo timestamp u query da "razbijemo" browser keš
             const trendRes = await storeService.getTop3Stores();
             if (trendRes.data) {
                 console.log("Top 3 podaci osveženi:", trendRes.data);
@@ -62,20 +59,17 @@ const Home = () => {
         
         fetchData();
 
-        // KLJUČNA IZMENA: Slušamo "update_top_3" jer to backend šalje
         socket.on("update_top_3", (updatedTop3) => {
             console.log("Stigli novi trending podaci preko socketa:", updatedTop3);
             
-            // Umesto da zovemo API, direktno setujemo podatke koje je backend poslao
-            setTrendingStores(updatedTop3);
+            const sorted = [...updatedTop3].sort((a,b)=>b.score - a.score);
+    setTrendingStores(sorted);
         });
 
         return () => {
             socket.off("update_top_3");
         };
-    }, []); // Prazan niz jer socket listener postavljamo samo jednom// Prazan array osigurava da se listener postavi samo jednom pri mount-u
-
-// ... ostatak koda ispod je isti
+    }, []);
 
     // Filtriranje i sortiranje
     const filteredProducts = useMemo(() => {
@@ -84,9 +78,6 @@ const Home = () => {
         console.log("Filtriram po kategoriji:", selectedCategory);
         
         temp = temp.filter(p => {
-            // 1. Proveravamo da li je kategorija unutar objekta (npr. p.category.name)
-            // 2. Proveravamo da li je kategorija direktan string (npr. p.category)
-            // 3. Proveravamo polje categoryName koje se često koristi u Neo4j mapiranju
             const productCategory = p.category?.name || p.categoryName || p.category;
             
             console.log(`Proizvod: ${p.name}, Kategorija u objektu:`, productCategory);
@@ -142,7 +133,6 @@ const Home = () => {
             )}
 
             <div className="main-layout container-custom">
-                {/* STICKY SIDEBAR (Kao na StoreDetails) */}
                 <aside className="sidebar">
                     <div className="sticky-sidebar">
                         <h4 className="sidebar-title">Kategorije</h4>
@@ -154,7 +144,7 @@ const Home = () => {
                         </div>
                         {categories.map((cat, i) => (
     <div 
-        key={cat.id || i} // Dodato || i za svaki slučaj
+        key={cat.id || i} 
         className={`cat-item ${selectedCategory === cat.name ? 'active-cat' : ''}`} 
         onClick={() => { 
             setSelectedCategory(cat.name); 
@@ -167,7 +157,6 @@ const Home = () => {
                     </div>
                 </aside>
 
-                {/* DESNA STRANA */}
                 <main className="content-area">
                     <div className="discovery-header-inline">
                         <div className="search-row">

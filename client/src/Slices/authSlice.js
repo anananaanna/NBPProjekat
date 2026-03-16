@@ -1,25 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// Proveravamo da li u browseru već postoji sačuvan korisnik
 const savedUser = JSON.parse(localStorage.getItem('user'));
+const savedToken = localStorage.getItem('token');
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
     user: savedUser || null,
-    isAuthenticated: !!savedUser,
+    token: savedToken || null,
+    isAuthenticated: !!(savedUser && savedToken),
   },
   reducers: {
     loginSuccess: (state, action) => {
       state.isAuthenticated = true;
-      state.user = action.payload;
-      // Čuvamo ga u browseru da se ne obriše na refresh
-      localStorage.setItem('user', JSON.stringify(action.payload));
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem('token', action.payload.token);
     },
     logout: (state) => {
       state.isAuthenticated = false;
       state.user = null;
+      state.token = null;
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
     },
   },
 });

@@ -1,3 +1,5 @@
+const { connection: redis_client } = require('../database');
+
 const rateLimiter = async (req, res, next) => {
     const ip = req.ip; // Ili userId ako je ulogovan
     const key = `rate-limit:${ip}`;

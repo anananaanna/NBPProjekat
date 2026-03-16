@@ -12,7 +12,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- 1. FIKSNE RUTE (Prvo one koje nemaju :id) ---
 router.get('/all', storeController.getAllStores); 
 router.get('/trending/top', storeController.getTop3Stores);
 router.get('/all-cached', storeController.getAllStores);
@@ -20,19 +19,16 @@ router.post('/create', upload.single('logo'), storeController.createStore);
 router.put('/update', storeController.updateStore);
 router.put('/add-discount', storeController.addProductToDiscount);
 
-// --- 2. RUTE SA PARAMETRIMA (Uvek idu na kraj) ---
 router.get('/:id', storeController.getStoreById);
 router.get('/:id/categories', storeController.getStoreCategories);
 router.get('/:id/products', storeController.getStoreProducts);
 router.delete('/delete/:id', storeController.deleteStore);
-router.get('/suggested/:userId', storeController.getSuggestedStores);
 
 router.get('/update-popularity/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const session = req.neo4jSession;
         
-        // Pozivamo funkciju koju smo napisali u kontroleru
         await storeController.updateStorePopularity(id, session);
         
         res.status(200).json({ message: `Popularnost za prodavnicu ${id} je uspešno osvežena u Redisu!` });

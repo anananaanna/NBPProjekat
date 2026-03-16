@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-// 1. BRIŠI: import { io } from "socket.io-client"; (ne treba ti ovde)
-import { socket } from './socketClient'; // Koristimo samo ovaj zajednički socket
+import { socket } from './socketClient'; 
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// CSS i Komponente...
 import './App.css'; 
 import Home from './Models/Home/Home'; 
 import Login from './Models/Login/Login';
@@ -27,20 +25,16 @@ function App() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    // 2. Proveravamo da li je korisnik ulogovan
     if (isAuthenticated && user) {
       const userData = user?.user || user;
       const actualId = userData?.id || userData?._id;
 
       if (actualId) {
-        // 3. Koristimo uvezeni socket, ne pravimo novi sa io()!
         socket.emit("join", actualId); 
         console.log(`App.js: Korisnik ${actualId} se pridružio sobi.`);
       }
     }
 
-    // 4. VAŽNO: Ovde NE stavljamo socket.disconnect() u return!
-    // Želimo da socket ostane živ dok god je sajt otvoren da bi Navbar mogao da ga koristi.
   }, [isAuthenticated, user]);
 
   return (

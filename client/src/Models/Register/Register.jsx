@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../Services/apiService';
+import { toast } from 'react-toastify';
 import './Register.css'; 
 
 const Register = () => {
@@ -11,22 +12,39 @@ const Register = () => {
         password: '',
         role: 'customer' 
     });
+    const [fieldErrors, setFieldErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const validateForm = () => {
+        const errors = {};
+        if (!formData.username.trim()) errors.username = 'Korisničko ime je obavezno';
+        if (formData.username.length < 3) errors.username = 'Korisničko ime mora imati najmanje 3 karaktera';
+        if (!formData.email) errors.email = 'Email je obavezan';
+        if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Nevažeći email format';
+        if (!formData.password) errors.password = 'Lozinka je obavezna';
+        if (formData.password.length < 6) errors.password = 'Lozinka mora imati najmanje 6 karaktera';
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (fieldErrors[e.target.name]) {
+            setFieldErrors({ ...fieldErrors, [e.target.name]: '' });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validateForm()) return;
         setIsSubmitting(true);
         try {
             await userService.register(formData);
-            alert("Uspešna registracija! Sada se možete ulogovati.");
+            toast.success("Uspešna registracija! Sada se možete ulogovati.");
             navigate('/login');
         } catch (err) {
             console.error(err);
-            alert("Greška pri registraciji: " + (err.response?.data?.error || "Pokušajte ponovo."));
+            toast.error("Greška pri registraciji: " + (err.response?.data?.error || "Pokušajte ponovo."));
         } finally {
             setIsSubmitting(false);
         }
@@ -48,6 +66,7 @@ const Register = () => {
                             required 
                         />
                         <span className="input-underline"></span>
+                        {fieldErrors.username && <div className="field-error">{fieldErrors.username}</div>}
                     </div>
                     
                     <div className="input-field-minimal">
@@ -60,6 +79,7 @@ const Register = () => {
                             required 
                         />
                         <span className="input-underline"></span>
+                        {fieldErrors.email && <div className="field-error">{fieldErrors.email}</div>}
                     </div>
                     
                     <div className="input-field-minimal">
@@ -72,13 +92,14 @@ const Register = () => {
                             required 
                         />
                         <span className="input-underline"></span>
+                        {fieldErrors.password && <div className="field-error">{fieldErrors.password}</div>}
                     </div>
 
                     <div className="role-selection-minimal">
                         <label>Registrujem se kao:</label>
                         <select name="role" value={formData.role} onChange={handleChange}>
                             <option value="customer">Kupac (želim da kupujem)</option>
-                            <option value="vendor">Prodavac (imam svoju prodavnicu)</option>
+                            <option value="seller">Prodavac (imam svoju prodavnicu)</option>
                         </select>
                     </div>
 
@@ -106,4 +127,4 @@ const Register = () => {
     );
 };
 
-export default Register;
+export default React.memo(Register);

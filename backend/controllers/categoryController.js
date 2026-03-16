@@ -1,5 +1,6 @@
 const Category = require('../models/Category');
 const { connection: redis_client } = require('../database');
+const io = require('../socket');
 
 // 1. CREATE
 exports.createCategory = async (req, res) => {
@@ -17,8 +18,11 @@ exports.createCategory = async (req, res) => {
             ...result.records[0].get('c').properties
         };
 
-        // Invalidacija: Brišemo keš jer lista više nije ista
+        // Brisemo kes jer lista vise nije ista
         await redis_client.del('categories:all');
+
+        // Emit real-time update 
+        io.getIO().emit('categories_updated', { action: 'created', category: newCategory });
 
         res.status(201).json({ message: "Kategorija kreirana!", category: newCategory });
     } catch (error) {
@@ -26,7 +30,7 @@ exports.createCategory = async (req, res) => {
     }
 };
 
-// 2. GET ALL (Redis Cache-Aside)
+// 2. GET ALL CATEGORIES
 exports.getAllCategories = async (req, res) => {
     const session = req.neo4jSession;
     if (!session) {
@@ -42,7 +46,6 @@ exports.getAllCategories = async (req, res) => {
     return {
         id: r.get('id').toNumber(),
         name: props.name,
-        // Dodajemo label i title jer React komponente često to traže za Sidebar
         label: props.name, 
         title: props.name,
         description: props.description || ""
@@ -63,7 +66,6 @@ exports.updateCategory = async (req, res) => {
     try {
         const { oldName, newName, description } = req.body;
         
-        // Menjamo i ime i opis u bazi
         await session.run(
             `MATCH (c:Category {name: $oldName}) 
              SET c.name = $newName, c.description = $description 
@@ -71,7 +73,7 @@ exports.updateCategory = async (req, res) => {
             { oldName, newName, description }
         );
 
-        // BRIŠEMO KEŠ: Da bi sledeći GET povukao nove podatke sa opisom
+        // Brisemo kes da bi sledeci GET povukao nove podatke sa opisom
         await redis_client.del('categories:all');
 
         res.status(200).json({ message: "Kategorija ažurirana sa opisom!" });
@@ -87,8 +89,10 @@ exports.deleteCategory = async (req, res) => {
         const { name } = req.params;
         await session.run('MATCH (c:Category {name: $name}) DETACH DELETE c', { name });
 
-        // Brišemo keš i nakon brisanja
+        // Brišemo kes i nakon brisanja
         await redis_client.del('categories:all');
+        
+        io.getIO().emit('categories_updated', { action: 'deleted', name });
 
         res.status(200).json({ message: "Kategorija obrisana!" });
     } catch (error) {

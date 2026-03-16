@@ -1,8 +1,8 @@
 const Rating = require('../models/Rating');
 
-// Na vrh fajla OBAVEZNO dodaj uvoz (proveri putanju do baze)
 const { connection, create_session } = require('../database'); 
 const storeController = require('./storeController');
+const io = require('../socket');
 
 exports.addRating = async (req, res) => {
     const session = req.neo4jSession;
@@ -20,12 +20,10 @@ exports.addRating = async (req, res) => {
 
         // 2. Rad sa Redisom i osvežavanje Top 3 liste
         try {
-            // Koristimo 'connection' (onaj iz database.js koji ima .connect())
             if (connection && connection.isOpen) {
                 // Brišemo keširane podatke o rejtingu jer su se upravo promenili
                 await connection.del(`store:${storeId}:rating_data`);
                 
-                // POZIV POPULARNOSTI: Ovo će izračunati novi rang i poslati SOCKET signal
                 const sCtrl = require('./storeController'); 
                 console.log(">>> Rejting sačuvan. Pokrećem updatePopularity za prodavnicu:", storeId);
                 await sCtrl.updateStorePopularity(storeId, session);
@@ -34,8 +32,9 @@ exports.addRating = async (req, res) => {
             }
         } catch (redisErr) {
             console.error(">>> Greška pri radu sa Redisom:", redisErr.message);
-            // Ne šaljemo 500 grešku korisniku jer je baza (Neo4j) uspešno odradila posao
         }
+
+        io.getIO().emit('store_updated', { storeId: parseInt(storeId), action: 'rating_added', userId: parseInt(userId) });
 
         return res.status(201).json({ message: "Ocena sačuvana!" });
 
@@ -56,11 +55,12 @@ exports.updateRating = async (req, res) => {
             { userId: parseInt(userId), storeId: parseInt(storeId), score: parseInt(score) }
         );
 
-        // OSVEŽAVANJE NAKON IZMENE
         if (connection && connection.isOpen) {
             await connection.del(`store:${storeId}:rating_data`);
             await storeController.updateStorePopularity(storeId, session);
         }
+
+        io.getIO().emit('store_updated', { storeId: parseInt(storeId), action: 'rating_updated', userId: parseInt(userId) });
 
         res.status(200).json({ message: "Recenzija izmenjena!" });
     } catch (error) {
@@ -71,7 +71,7 @@ exports.updateRating = async (req, res) => {
 // 2. READ: Prosečna ocena prodavnice (Cache-Aside)
 exports.getStoreRating = async (req, res) => {
     const { storeId } = req.params;
-    const cacheKey = `store:${storeId}:rating_data`; // Promenjen ključ jer čuvamo i count
+    const cacheKey = `store:${storeId}:rating_data`; 
     
     try {
         let cachedData = await redis_client?.get(cacheKey);
@@ -91,7 +91,7 @@ exports.getStoreRating = async (req, res) => {
         const responseData = { 
             storeId, 
             averageRating: prosek, 
-            count: brojOcena, // Ovo je bitno za StoreDetails
+            count: brojOcena,
             source: 'db' 
         };
 
@@ -120,13 +120,14 @@ exports.deleteRating = async (req, res) => {
             if (connection && connection.isOpen) {
                 await connection.del(`store:${storeId}:rating_data`);
                 
-                // OVO SI ZABORAVILA - bez ovoga se Top 3 ne menja na ekranu
                 console.log("Brisanje rejtinga, osvežavam listu...");
                 await storeController.updateStorePopularity(storeId, session);
             }
         } catch (redisErr) {
             console.log("Redis error:", redisErr.message);
         }
+
+        io.getIO().emit('store_updated', { storeId: parseInt(storeId), action: 'rating_deleted', userId: parseInt(userId) });
 
         res.status(200).json({ message: "Uspešno obrisano!" });
     } catch (error) {
@@ -147,9 +148,7 @@ exports.getAllRatingsForStore = async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
-// POMOĆNA FUNKCIJA (unutar istog fajla na vrhu ili dnu)
 exports.getUserRatingForStore = async (req, res) => {
-    // Koristimo isti session kao i u ostalim funkcijama
     const session = req.neo4jSession; 
     const { userId, storeId } = req.params;
 
@@ -157,7 +156,6 @@ exports.getUserRatingForStore = async (req, res) => {
     console.log("Tražim rejting za User ID:", userId, "i Store ID:", storeId);
 
     try {
-        // Koristimo ID(u) jer tako radiš u addRating i deleteRating
         const result = await session.run(
             `MATCH (u:User)-[r:RATED]->(s:Store)
              WHERE ID(u) = $uId AND ID(s) = $sId
@@ -169,7 +167,6 @@ exports.getUserRatingForStore = async (req, res) => {
         );
 
         if (result.records.length > 0) {
-            // Neo4j brojevi su objekti, .toNumber() ili Number() osigurava čist broj
             const score = result.records[0].get('score');
             const finalScore = typeof score.toNumber === 'function' ? score.toNumber() : score;
             
@@ -183,6 +180,4 @@ exports.getUserRatingForStore = async (req, res) => {
         console.error(">>> GREŠKA U getUserRatingForStore:", error);
         res.status(500).json({ error: "Greška u Neo4j: " + error.message });
     }
-    // NE ZATVARAJ SESIJU OVDE (session.close()) jer je verovatno 
-    // zatvara middleware koji ti je i dao req.neo4jSession
 };

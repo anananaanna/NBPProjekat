@@ -11,7 +11,7 @@ const StoreDetails = () => {
     const userData = user?.user || user;
     const userId = userData?.id || userData?._id;
     const currentUserName = userData?.username;
-    const isVendor = userData?.role === 'vendor';
+    const isVendor = userData?.role === 'seller';
 
     const [store, setStore] = useState(null);
     const [categories, setCategories] = useState([]);
@@ -46,13 +46,11 @@ const StoreDetails = () => {
             setLoading(true);
             console.log("--- START LOADING DATA ---");
              console.log("Current UserID:", userId);
-            // Dodajemo i rejting u Promise.allSettled
             const [storeRes, catRes, prodRes, commRes, userRatingRes] = await Promise.allSettled([
                 storeService.getStoreById(storeId, userId),
                 storeService.getStoreCategories(storeId),
                 storeService.getStoreProducts(storeId),
                 storeService.getStoreComments(storeId),
-                // Ako je korisnik ulogovan, vučemo njegovu ocenu
                 (isAuthenticated && userId) ? ratingService.getUserRating(userId, storeId) : Promise.reject('Not auth')
             ]);
 
@@ -65,7 +63,6 @@ const StoreDetails = () => {
                 setIsFollowing(!!storeData.isFollowing);
             }
             
-            // NOVO: Postavljanje userRating-a iz baze
             if (userRatingRes.status === 'fulfilled' && userRatingRes.value.data) {
                 console.log("API RATING SUCCESS:", userRatingRes.value.data);
                 const scoreFromDb = userRatingRes.value.data.score || userRatingRes.value.data.rating;
@@ -104,22 +101,18 @@ const StoreDetails = () => {
         if (commRes.status === 'fulfilled') setComments(commRes.value.data || []);
     };
 
-    // --- LOGIKA ZA RECENZIJE ---
     const myReview = useMemo(() => {
     if (!comments || !currentUserName) return null;
 
-    // 1. Nađi komentar
     const comment = comments.find(c => 
         (c.username === currentUserName || c.user === currentUserName || c.author === currentUserName)
     );
 
     if (!comment) return null;
 
-    // 2. Pošto su modeli odvojeni, komentar verovatno nema polje 'score'.
-    // Uzimamo 'userRating' iz state-a (koji se puni pri učitavanju ili menjanju)
     return {
         ...comment,
-        score: userRating // Ovde koristimo lokalni state koji drži vrednost iz Rating modela
+        score: userRating 
     };
 }, [comments, currentUserName, userRating]);
 
@@ -132,7 +125,6 @@ const StoreDetails = () => {
 
     console.log("Komentari:", comments);
     console.log("MyReview:", myReview);
-    // ---------------------------
 
     const filteredProducts = useMemo(() => {
         let temp = [...allProducts];
@@ -175,9 +167,7 @@ const StoreDetails = () => {
         
         // Ponovo učitaj prosek i komentare
         await loadFeedback(); 
-        
-        // Manuelno ažuriramo state da se odmah vidi promena bez osvežavanja
-        // myReview useMemo će automatski reagovati na ovo
+
         setIsEditing(false);
         alert("Uspešno sačuvano!");
     } catch (err) { console.error(err); }
@@ -219,6 +209,7 @@ const StoreDetails = () => {
                                     <strong>👥</strong> {store?.followers || 0} PRATIOCA
                                 </p>
 
+                                {!isVendor && (
                                 <button 
                                     onClick={handleFollow}
                                     style={{
@@ -230,6 +221,7 @@ const StoreDetails = () => {
                                 >
                                     {isFollowing ? 'OTPRATI' : 'ZAPRATI'}
                                 </button>
+                                )}
                             </div>
                         </div>
 
@@ -312,53 +304,62 @@ const StoreDetails = () => {
                     </div>
                 </div>
 
-                <div style={styles.formCardFull}>
-                    <h2 style={styles.header}>VAŠ UTISAK</h2>
-                    {isAuthenticated && !isVendor ? (
-                        myReview && !isEditing ? (
-                            <div style={styles.myReviewBox}>
-    <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
-        {/* Koristimo userRating kao fallback ako score još nije stigao u myReview objektu */}
-        <span style={{fontWeight:'900'}}>
-    VAŠA OCENA: ★ {userRating}
-</span>
-    </div>
-    <p style={{fontStyle:'italic', marginBottom:'25px', fontSize:'1.1rem'}}>"{myReview.text}"</p>
-    <div style={{display:'flex', gap:'10px'}}>
-        <button style={styles.editBtn} onClick={() => { 
-            setIsEditing(true); 
-            setUserComment(myReview.text);
-            setUserRating(myReview.score || myReview.rating || userRating); 
-        }}>IZMENI</button>
-        <button style={styles.delBtn} onClick={handleDeleteReview}>OBRIŠI</button>
-    </div>
-</div>
-                        ) : (
-                            <div style={{display:'flex', flexDirection:'column', gap:'20px'}}>
-                                <div style={{width: '300px'}}>
-                                    <label style={styles.label}>VAŠA OCENA</label>
-                                    <select style={styles.select} value={userRating} onChange={(e)=>setUserRating(e.target.value)}>
-                                        {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} ZVEZDICA</option>)}
-                                    </select>
-                                </div>
-                                <textarea 
-                                    style={styles.area} 
-                                    placeholder="NAPRAVITE RECENZIJU..."
-                                    value={userComment}
-                                    onChange={(e)=>setUserComment(e.target.value)}
-                                />
-                                <div style={{display:'flex', gap:'10px'}}>
-                                    <button style={styles.blackBtnReview} onClick={handleSubmitReview}>
-                                        {isEditing ? "SAČUVAJ IZMENE" : "OBJAVI RECENZIJU"}
-                                    </button>
-                                    {isEditing && <button style={styles.whiteBtn} onClick={() => setIsEditing(false)}>OTKAŽI</button>}
-                                </div>
-                            </div>
-                        )
-                    ) : (
-                        <p style={{color: '#888'}}>Morate biti prijavljeni kao kupac da biste ostavili recenziju.</p>
-                    )}
+               <div style={styles.formCardFull}>
+    <h2 style={styles.header}>VAŠ UTISAK</h2>
+    
+    {isVendor ? (
+        <p style={{color: '#888'}}>Prodavci ne mogu ostavljati recenzije.</p>
+    ) : (
+        <>
+            {!isAuthenticated ? (
+                <div>
+                    <p style={{marginBottom: '15px'}}>Prijavite se da biste ostavili recenziju.</p>
+                    <button style={styles.blackBtnReview} onClick={() => alert("Moraš se ulogovati da bi ostavio recenziju!")}>
+                        OBJAVI RECENZIJU
+                    </button>
                 </div>
+            ) : (
+                myReview && !isEditing ? (
+                    <div style={styles.myReviewBox}>
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px'}}>
+                            <span style={{fontWeight:'900'}}>VAŠA OCENA: ★ {userRating}</span>
+                        </div>
+                        <p style={{fontStyle:'italic', marginBottom:'25px', fontSize:'1.1rem'}}>"{myReview.text}"</p>
+                        <div style={{display:'flex', gap:'10px'}}>
+                            <button style={styles.editBtn} onClick={() => { 
+                                setIsEditing(true); 
+                                setUserComment(myReview.text);
+                                setUserRating(myReview.score || myReview.rating || userRating); 
+                            }}>IZMENI</button>
+                            <button style={styles.delBtn} onClick={handleDeleteReview}>OBRIŠI</button>
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{display:'flex', flexDirection:'column', gap:'20px'}}>
+                        <div style={{width: '300px'}}>
+                            <label style={styles.label}>VAŠA OCENA</label>
+                            <select style={styles.select} value={userRating} onChange={(e)=>setUserRating(e.target.value)}>
+                                {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} ZVEZDICA</option>)}
+                            </select>
+                        </div>
+                        <textarea 
+                            style={styles.area} 
+                            placeholder="NAPRAVITE RECENZIJU..."
+                            value={userComment}
+                            onChange={(e)=>setUserComment(e.target.value)}
+                        />
+                        <div style={{display:'flex', gap:'10px'}}>
+                            <button style={styles.blackBtnReview} onClick={handleSubmitReview}>
+                                {isEditing ? "SAČUVAJ IZMENE" : "OBJAVI RECENZIJU"}
+                            </button>
+                            {isEditing && <button style={styles.whiteBtn} onClick={() => setIsEditing(false)}>OTKAŽI</button>}
+                        </div>
+                    </div>
+                )
+            )}
+        </>
+    )}
+</div>
             </div>
         </div>
     );

@@ -42,20 +42,16 @@ const SaleProduct = () => {
         fetchSaleData();
     }, []);
 
-    // Logika za jedinstvene brendove među sniženim proizvodima
     const brands = useMemo(() => {
         return ['All', ...new Set(allProducts.map(p => p.brand).filter(Boolean))];
     }, [allProducts]);
 
-    // Glavna filtracija
     const filteredProducts = useMemo(() => {
         let temp = [...allProducts];
         
         // Kategorija
         if (selectedCategory !== 'All') {
         temp = temp.filter(p => {
-            // Proveravamo categoryName (koji stiže iz Neo4j relacije)
-            // ili p.category.name (ako je u pitanju neki drugi format)
             const pCat = p.categoryName || p.category?.name || p.category;
             return pCat === selectedCategory;
         });
@@ -117,7 +113,6 @@ const SaleProduct = () => {
                 </aside>
 
                 <main className="content-area">
-                    {/* Discovery Header sa svim filterima kao u Home */}
                     <div className="discovery-header-inline">
                         <div className="search-row">
                             <input 

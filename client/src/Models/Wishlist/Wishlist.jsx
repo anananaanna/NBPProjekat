@@ -23,7 +23,6 @@ const Wishlist = () => {
 
         if (actualUserId && isAuthenticated) {
             try {
-                // Ne gasimo loading ovde da ne bi blicalo, samo povučemo sveže podatke
                 const response = await userService.getWishlist(actualUserId);
                 const rawData = Array.isArray(response.data) ? response.data : [];
                 const cleanedData = rawData.map(item => ({
@@ -31,7 +30,6 @@ const Wishlist = () => {
                     id: getCleanId(item)
                 }));
                 setWishlistItems(cleanedData);
-                // U Wishlist.jsx, unutar fetchWishlist funkcije, nakon setWishlistItems:
                 cleanedData.forEach(item => {
                 localStorage.setItem(`wishlist_${item.id}`, 'true');
                 });
@@ -45,7 +43,6 @@ const Wishlist = () => {
         }
     }, [user, isAuthenticated]);
 
-    // OVO JE KLJUČ: Osvežava listu svaki put kada se korisnik vrati na ovaj tab
     useEffect(() => {
         fetchWishlist();
         window.addEventListener('focus', fetchWishlist);
@@ -57,7 +54,7 @@ const Wishlist = () => {
         const actualUserId = getCleanId(userData);
         try {
             await userService.removeFromWishlist({ userId: actualUserId, productId });
-            // Odmah sklanjamo iz stanja
+
             setWishlistItems(prev => prev.filter(item => String(item.id) !== String(productId)));
         } catch (err) {
             alert("Greška pri brisanju.");

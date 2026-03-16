@@ -6,7 +6,7 @@ class User {
         this.role = role;
     }
 
-    // Ovo je ono što sestra ima - olakšava pisanje CREATE upita
+ 
     toJson() {
         return `{
             username: '${this.username}',

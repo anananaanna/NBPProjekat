@@ -11,7 +11,7 @@ class Store {
             storeId: this.id,
             name: this.name.toUpperCase(),
             fullAddress: `Lokacija: ${this.location}`,
-            status: "Otvoreno" // Ovde može ići prava logika za radno vreme
+            status: "Otvoreno" 
         };
     }
 }

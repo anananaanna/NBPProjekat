@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -17,7 +18,6 @@ app.use(bodyParser.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 3. Neo4j Middleware (mora biti pre ruta!)
 app.use(neo4jMiddleware);
 
 // 4. Uvoz ruta
@@ -40,13 +40,40 @@ app.use('/comment', commentRoutes);
 app.use('/rating', ratingRoutes);
 app.use('/notifications', notificationRoutes);
 
-// 6. Graceful shutdown - Zatvaranje Neo4j drivera kada se ugasi server
-// Ovo sprema "leak" konekcija ka bazi
-process.on('SIGINT', async () => {
+process.on('SIGINT', shutdownHandler);
+process.on('SIGUSR2', shutdownHandler); // Za nodemon restart
+
+async function shutdownHandler() {
+    console.log('Zatvaram server i sve konekcije...');
+    
+    // Zatvori HTTP server
+    server.close(() => {
+        console.log('HTTP server zatvoren.');
+    });
+    
+    // Zatvori Socket.io
+    const io = socket.getIO();
+    io.close(() => {
+        console.log('Socket.io zatvoren.');
+    });
+    
+    // Zatvori Neo4j driver
     await driver.close();
     console.log('Neo4j driver zatvoren.');
+    
+    // Zatvori Redis konekcije
+    const { connection, redis_client } = require('./database');
+    if (connection.isOpen) {
+        await connection.quit();
+        console.log('Redis connection zatvoren.');
+    }
+    if (redis_client.isOpen()) {
+        await redis_client.close();
+        console.log('Redis-OM client zatvoren.');
+    }
+    
     process.exit(0);
-});
+}
 
 const PORT = 3001;
 server.listen(PORT, () => {

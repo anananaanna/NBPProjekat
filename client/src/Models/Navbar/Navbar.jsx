@@ -1,31 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { notificationService } from '../../Services/apiService';
 import { socket } from '../../socketClient';
+import { logout } from '../../Slices/authSlice';
 import './Navbar.css';
 
 const Navbar = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { user, isAuthenticated } = useSelector((state) => state.auth);
     const userData = user?.user || user;
 
     // Provera da li je u pitanju prodavac
-    const isVendor = userData?.role === 'vendor';
+    const isVendor = userData?.role === 'seller';
+
+    const handleLogout = () => {
+        dispatch(logout());
+        socket.disconnect();
+        navigate('/login');
+    };
 
     const [notifications, setNotifications] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     
-    // --- LOGIKA ZA SAKRIVANJE NAVBARA NA SCROLL ---
     const [isVisible, setIsVisible] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
 
     useEffect(() => {
         const controlNavbar = () => {
             if (window.scrollY > lastScrollY && window.scrollY > 100) { 
-                setIsVisible(false); // Skroluješ na dole - sakrij
+                setIsVisible(false); 
             } else {
-                setIsVisible(true);  // Skroluješ na gore - prikaži
+                setIsVisible(true);  
             }
             setLastScrollY(window.scrollY);
         };
@@ -33,14 +40,12 @@ const Navbar = () => {
         window.addEventListener('scroll', controlNavbar);
         return () => window.removeEventListener('scroll', controlNavbar);
     }, [lastScrollY]);
-    // ----------------------------------------------
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     useEffect(() => {
         if (isAuthenticated && userData?.id) {
             const userIdStr = userData.id.toString();
-            socket.emit("join", userIdStr); 
             socket.emit("join", `user:${userIdStr}`); 
 
             const handleIncoming = (notif) => {
@@ -75,7 +80,6 @@ const Navbar = () => {
 
     return (
         <nav className={`main-navbar ${isVisible ? 'visible' : 'hidden'}`}>
-            {/* GORNJI NIVO */}
             <div className="nav-top">
                 <div className="nav-top-left">
                     {/* Prazno za balans */}
@@ -86,7 +90,6 @@ const Navbar = () => {
                 </div>
 
                 <div className="nav-top-right">
-                    {/* OBAVEŠTENJA */}
                     {isAuthenticated && (
                         <div className="nav-icon-only" onClick={handleBellClick}>
                             <div className="icon-wrapper">
@@ -116,7 +119,6 @@ const Navbar = () => {
                         </div>
                     )}
 
-                    {/* NALOG / PRIJAVI SE */}
                     <div className="nav-icon-only" onClick={() => navigate(isAuthenticated ? '/profile' : '/login')}>
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -124,7 +126,6 @@ const Navbar = () => {
                         </svg>
                     </div>
 
-                    {/* OMILJENO (WISHLIST) - Prikazuje se samo ako korisnik NIJE prodavac */}
                     {!isVendor && (
                         <div className="nav-icon-only" onClick={() => navigate('/wishlist')}>
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
@@ -135,7 +136,6 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* DONJI NIVO */}
             <div className="nav-bottom">
                 <div className="nav-links-container">
                     <button onClick={() => navigate('/preporuceno')} className="nav-btn">PREPORUČENO ZA TEBE</button>

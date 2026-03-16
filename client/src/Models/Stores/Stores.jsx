@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { storeService, productService } from '../../Services/apiService'; // Pretpostavljam da je ovde getAllCategories
+import { storeService, productService } from '../../Services/apiService'; 
 
 const IMAGE_BASE_URL = "http://localhost:3001/uploads/";
 
@@ -12,11 +12,11 @@ const Stores = () => {
     // Filter states
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCity, setSelectedCity] = useState("Svi gradovi");
-    const [selectedCategory, setSelectedCategory] = useState("Sve kategorije"); // NOVO
+    const [selectedCategory, setSelectedCategory] = useState("Sve kategorije"); 
     const [sortBy, setSortBy] = useState("name");
     
     const [availableCities, setAvailableCities] = useState([]);
-    const [allCategories, setAllCategories] = useState([]); // NOVO
+    const [allCategories, setAllCategories] = useState([]); 
 
     useEffect(() => {
         const fetchData = async () => {
@@ -83,7 +83,6 @@ const Stores = () => {
 
     const filteredStores = getProcessedStores();
 
-    // ... loading UI ostaje isti ...
     if (loading) return (
         <div style={{ textAlign: 'center', padding: '100px', fontSize: '1.2rem', color: '#888' }}>
             Učitavanje prodavnica...
@@ -116,8 +115,8 @@ const Stores = () => {
                         onChange={(e) => setSelectedCategory(e.target.value)}
                     >
                         <option value="Sve kategorije">Sve kategorije</option>
-                        {allCategories.map(cat => (
-                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                        {allCategories.map((cat, index) => (
+                            <option key={cat.id || cat._id || index} value={cat.name}>{cat.name}</option>
                         ))}
                     </select>
 
@@ -127,8 +126,8 @@ const Stores = () => {
                         onChange={(e) => setSelectedCity(e.target.value)}
                     >
                         <option value="Svi gradovi">Svi gradovi</option>
-                        {availableCities.map(city => (
-                            <option key={city} value={city}>{city}</option>
+                        {availableCities.map((city, index) => (
+                            <option key={`city-${index}`} value={city}>{city}</option>
                         ))}
                     </select>
 
@@ -160,10 +159,15 @@ const Stores = () => {
                         </div>
                         <h3 style={styles.cardTitle}>{store.name}</h3>
                         
-                        {/* Prikaz kategorija prodavnice kao male tagove (opciono) */}
                         <div style={{display: 'flex', gap: '5px', marginBottom: '10px', flexWrap: 'wrap', justifyContent: 'center'}}>
-                            {store.categories?.slice(0, 3).map(c => (
-                                <span key={c} style={{fontSize: '10px', background: '#eee', padding: '2px 6px', borderRadius: '10px'}}>{c}</span>
+                            {store.categories?.slice(0, 3).map((c, index) => (
+                                <span 
+
+            key={`tag-${store.id}-${c}-${index}`} 
+            style={{fontSize: '10px', background: '#eee', padding: '2px 6px', borderRadius: '10px'}}
+        >
+            {c}
+        </span>
                             ))}
                         </div>
 

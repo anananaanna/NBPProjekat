@@ -1,4 +1,5 @@
 const Comment = require('../models/Comment');
+const io = require('../socket');
 
 // 1. ADD COMMENT
 exports.addComment = async (req, res) => {
@@ -24,16 +25,34 @@ exports.addComment = async (req, res) => {
             author: result.records[0].get('author'),
             date: result.records[0].get('c').properties.date
         };
+
+        io.getIO().emit('store_updated', { storeId: parseInt(storeId), action: 'comment_added', comment: newComment });
+
         res.status(201).json({ message: "Recenzija sačuvana!", comment: newComment });
     } catch (error) { res.status(500).json({ error: error.message }); }
 };
 
-// 2. DELETE COMMENT (Ostaje skoro isti, ali čisto da bude kompletan CRUD)
+// 2. DELETE COMMENT 
 exports.deleteComment = async (req, res) => {
     const session = req.neo4jSession;
     try {
         const { id } = req.params;
+
+        const getStoreResult = await session.run(
+            'MATCH (s:Store)<-[c:COMMENTED]-() WHERE ID(c) = $id RETURN ID(s) as storeId',
+            { id: parseInt(id) }
+        );
+
+        if (getStoreResult.records.length === 0) {
+            return res.status(404).json({ error: "Komentar nije pronađen." });
+        }
+
+        const storeId = getStoreResult.records[0].get('storeId').toNumber();
+
         await session.run('MATCH ()-[c:COMMENTED]->() WHERE ID(c) = $id DELETE c', { id: parseInt(id) });
+
+        io.getIO().emit('store_updated', { storeId, action: 'comment_deleted', commentId: parseInt(id) });
+
         res.status(200).json({ message: "Komentar obrisan." });
     } catch (error) { res.status(500).json({ error: error.message }); }
 };
@@ -43,7 +62,22 @@ exports.updateComment = async (req, res) => {
     const session = req.neo4jSession;
     try {
         const { id, newText } = req.body;
+
+        const getStoreResult = await session.run(
+            'MATCH (s:Store)<-[c:COMMENTED]-() WHERE ID(c) = $id RETURN ID(s) as storeId',
+            { id: parseInt(id) }
+        );
+
+        if (getStoreResult.records.length === 0) {
+            return res.status(404).json({ error: "Komentar nije pronađen." });
+        }
+
+        const storeId = getStoreResult.records[0].get('storeId').toNumber();
+
         await session.run('MATCH ()-[c:COMMENTED]->() WHERE ID(c) = $id SET c.text = $newText RETURN c', { id: parseInt(id), newText });
+
+        io.getIO().emit('store_updated', { storeId, action: 'comment_updated', commentId: parseInt(id), newText });
+
         res.status(200).json({ message: "Komentar izmenjen!" });
     } catch (error) { res.status(500).json({ error: error.message }); }
 };

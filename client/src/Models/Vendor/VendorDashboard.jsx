@@ -161,9 +161,6 @@ const VendorDashboard = () => {
                     + Kreiraj Novu Prodavnicu
                 </button>
             </div>
-
-            {/* --- MODAL ZA PREGLED PROIZVODA --- */}
-            {/* --- MODAL ZA PREGLED PROIZVODA --- */}
 {showProducts && (
     <div className="overlay-minimal">
         <div className="modal-content-minimal">
@@ -199,7 +196,6 @@ const VendorDashboard = () => {
                         .map(p => (
                             <div key={p.id} className="product-manage-wrapper">
                                 <ProductCard product={p} />
-                                {/* Dugme za brzu izmenu unutar modala */}
                                 <button 
                                     className="btn-outline-wide" 
                                     style={{marginTop: '10px', borderTop: '1px solid #eee'}}
@@ -242,7 +238,6 @@ const VendorDashboard = () => {
     </div>
 )}
 
-            {/* --- MODAL ZA DODAVANJE PROIZVODA (Ovo ti je falilo!) --- */}
             {showForm && (
                 <div className="overlay-minimal">
                     <div className="modal-content-small">
@@ -271,7 +266,6 @@ const VendorDashboard = () => {
                 </div>
             )}
 
-            {/* --- MODAL ZA PODEŠAVANJA PRODAVNICE --- */}
             {showStoreEdit && (
                 <div className="overlay-minimal">
                     <div className="modal-content-small">

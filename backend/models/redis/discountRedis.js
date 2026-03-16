@@ -14,7 +14,5 @@ const discountSchema = new Schema('Discount', {
 // Pravimo repozitorijum (alat za rad sa podacima)
 const discountRepository = new Repository(discountSchema, redis_client);
 
-// Kreiramo indeks (ovo omogućava pretragu po storeName, kao kod sestre)
-//discountRepository.createIndex();
 
 module.exports = discountRepository;

@@ -19,11 +19,7 @@ exports.sendNotification = async (userId, message, type) => {
         const io = socketIO.getIO();
         const roomName = `user:${userId}`;
 
-        // 2. OSTAVI SAMO OVU JEDNU LINIJU ZA EMIT:
         io.to(roomName).emit("getNotification", notification);
-        
-        // OBRISAO SAM: io.to(roomName).emit("discount_notification", notification); 
-        // To je bio krivac za duple poruke!
 
         console.log(`Notifikacija poslata u sobu ${roomName}`);
     } catch (err) {
@@ -44,7 +40,7 @@ exports.getNotifications = async (req, res) => {
     }
 };
 
-// Brisanje na logout (ovo pozovi u login/logout kontroleru)
+// Brisanje na logout 
 exports.clearNotifications = async (userId) => {
     try {
         await connection.del(`notifications:${userId}`);
@@ -59,7 +55,7 @@ exports.markAsRead = async (req, res) => {
         const data = await connection.lRange(`notifications:${userId}`, 0, -1);
         const updatedData = data.map(item => {
             const parsed = JSON.parse(item);
-            parsed.isRead = true; // Samo označavamo kao pročitano [cite: 459]
+            parsed.isRead = true; // Samo označavamo kao pročitano 
             return JSON.stringify(parsed);
         });
 

@@ -1,5 +1,5 @@
 const discountRepository = require('../models/redis/discountRedis');
-const io = require('../socket'); // Putanja mora biti tačna
+const io = require('../socket');
 
 exports.addDiscount = async (req, res) => {
     const session = req.neo4jSession;
@@ -58,12 +58,12 @@ exports.addDiscount = async (req, res) => {
             }
         );
 
-        // --- DEO ZA NOTIFIKACIJE ---
+        // deo za notifikacije
         console.log("--- DIJAGNOSTIKA NOTIFIKACIJA ---");
         
         const wishlistUsers = await session.run(
             `MATCH (u:User)-[:INTERESTED_IN]->(p:Product {name: $productName})
-             RETURN u, ID(u) as internalId`, // Uzimamo ceo čvor i njegov interni ID za svaki slučaj
+             RETURN u, ID(u) as internalId`, 
             { productName: exactProductName }
         );
 
@@ -74,8 +74,6 @@ exports.addDiscount = async (req, res) => {
             const userNode = record.get('u').properties;
             const internalId = record.get('internalId').toString();
             
-            // PROVJERA: Koji ID tvoj sistem koristi? 
-            // Ako je u terminalu pisalo "Korisnik 27", onda je to verovatno internalId ili userNode.id
             const targetUserId = userNode.id || userNode.userId || internalId;
             
             console.log(`Šaljem socket poruku korisniku: ${userNode.username} (ID: ${targetUserId})`);
@@ -98,51 +96,6 @@ exports.addDiscount = async (req, res) => {
         if (!res.headersSent) {
             res.status(500).json({ error: error.message });
         }
-    }
-};
-
-// 2. READ - Cache-Aside logika
-exports.getStoreDiscounts = async (req, res) => {
-    const { storeName } = req.params;
-    try {
-        await discountRepository.createIndex();
-        
-        // 1. POKUŠAJ REDIS
-        const redisDiscounts = await discountRepository.search()
-            .where('storeName').equals(storeName)
-            .return.all();
-
-        if (redisDiscounts.length > 0) {
-            return res.status(200).json(redisDiscounts);
-        }
-
-        // 2. AKO REDIS NEMA, IDI NA NEO4J
-        const session = req.neo4jSession;
-        const result = await session.run(
-            `MATCH (s:Store {name: $storeName})-[:OFFERS]->(d:Discount)-[:APPLIES_TO]->(p:Product)
-             RETURN d.amount as amount, s.name as storeName, p.name as productName, ID(d) as neoId`,
-            { storeName }
-        );
-
-        const response = result.records.map(record => ({
-            amount: record.get('amount'),
-            storeName: record.get('storeName'),
-            productName: record.get('productName'),
-            neo4jId: record.get('neoId').low
-        }));
-
-        // 3. KEŠIRAJ U REDIS
-        if (response.length > 0) {
-            for (const item of response) {
-                const entity = await discountRepository.createEntity(item);
-                await discountRepository.save(entity);
-                await discountRepository.expire(entity.entityId, 300);
-            }
-        }
-
-        res.status(200).json(response);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
     }
 };
 
@@ -172,28 +125,6 @@ exports.updateDiscount = async (req, res) => {
     }
 };
 
-// 4. DELETE - Brisanje svuda
-exports.deleteDiscount = async (req, res) => {
-    const session = req.neo4jSession;
-    try {
-        const { id } = req.params;
-        
-        await session.run('MATCH (d:Discount) WHERE ID(d) = $id DETACH DELETE d', { id: parseInt(id) });
-        
-        // Očisti Redis
-        const redisItems = await discountRepository.search()
-            .where('neo4jId').equals(parseInt(id))
-            .return.all();
-
-        for (const item of redisItems) {
-            await discountRepository.remove(item.entityId);
-        }
-
-        res.status(200).json({ message: "Popust obrisan svuda." });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
 
 exports.removeDiscount = async (req, res) => {
     const session = req.neo4jSession;

@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App'; // Ovo je tvoja glavna komponenta (nju ćemo sledeću srediti)
+import App from './App'; 
 import { Provider } from 'react-redux';
-import { store } from './store'; // Onaj fajl što smo napravili pre 10 minuta
+import { store } from './store'; 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

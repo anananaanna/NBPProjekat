@@ -6,7 +6,7 @@ module.exports = {
     init: (httpServer) => {
         io = new Server(httpServer, {
             cors: {
-                origin: "*", // U produkciji ovde ide URL tvog frontenda
+                origin: "*", 
                 methods: ["GET", "POST"]
             }
         });

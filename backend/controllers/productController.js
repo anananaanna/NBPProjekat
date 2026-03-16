@@ -1,13 +1,13 @@
 const Product = require('../models/Product');
 const productRepository = require('../models/redis/productRedis');
-const { connection: redis_client } = require('../database'); // Dodaj ovo ako ti treba direktan pristup klijentu
+const { connection: redis_client } = require('../database'); 
 const notificationService = require('./notificationController');
+const io = require('../socket');
 
-// 1. CREATE - Sa transakcijom
-// Izmeni createProduct funkciju u productController.js
+// 1. CREATE 
 exports.createProduct = async (req, res) => {
     const session = req.neo4jSession;
-    const notificationService = require('./notificationController'); // Putanja do tvog novog kontrolera
+    const notificationService = require('./notificationController'); 
 
     try {
         const { name, price, brand, type, storeId, categoryName } = req.body;
@@ -46,7 +46,7 @@ exports.createProduct = async (req, res) => {
             await storeRepository.dropIndex().catch(() => {}); 
         } catch (e) { console.log("Greška pri brisanju keša"); }
 
-        // --- NOTIFIKACIJA: Pratioci prodavnice ---
+        // DEO ZA NOTIFIKACIJE 
         const followers = await session.run(
             `MATCH (u:User)-[:FOLLOWS]->(s:Store) WHERE ID(s) = $sId RETURN ID(u) as uId`,
             { sId: sIdNum }
@@ -59,6 +59,8 @@ exports.createProduct = async (req, res) => {
                 'new_product'
             );
         });
+
+        io.getIO().emit('store_updated', { storeId: sIdNum, action: 'product_added', product: savedProduct });
 
         res.status(201).json({ message: "Proizvod dodat!", product: savedProduct });
     } catch (error) {
@@ -81,15 +83,12 @@ exports.getAllProducts = async (req, res) => {
         }
 
         if (cachedProducts.length > 0) {
-            // PROVERA: Ako tvoj Redis model nema polje categoryName, 
-            // filtriranje će i dalje bagovati dok ne obrišeš stari keš.
             console.log(`[REDIS] Vraćeno iz keša.`);
             return res.status(200).json(cachedProducts);
         }
 
         const session = req.neo4jSession;
         
-        // IZMENJEN UPIT: Dodajemo kategoriju u priču
         const result = await session.run(`
             MATCH (p:Product)-[:BELONGS_TO]->(c:Category) 
             RETURN p, ID(p) as id, c.name as catName
@@ -101,7 +100,7 @@ exports.getAllProducts = async (req, res) => {
                 ...props,
                 id: record.get('id').toNumber(),
                 price: props.price ? Number(props.price) : 0,
-                categoryName: record.get('catName') // OVO MORA DA POSTOJI ZA SIDEBAR
+                categoryName: record.get('catName') 
             };
         });
 
@@ -114,7 +113,7 @@ exports.getAllProducts = async (req, res) => {
                     type: p.type,
                     image: p.image,
                     neo4jId: p.id,
-                    categoryName: p.categoryName // DODAJ I U REDIS
+                    categoryName: p.categoryName 
                 });
             }
             console.log(">>> [REDIS] Svi proizvodi osveženi sa kategorijama.");
@@ -132,13 +131,11 @@ exports.updateProduct = async (req, res) => {
     const session = req.neo4jSession;
     
     try {
-        // 1. Provera šta je stiglo (vidi ovo u terminalu gde ti radi server)
         console.log("Stiglo u body:", req.body);
         console.log("Fajl:", req.file);
 
         const { id, name, price, brand } = req.body;
         
-        // Moramo osigurati da je ID broj, jer Neo4j ID-jeve tretira kao Integer
         const numericId = parseInt(id);
         if (isNaN(numericId)) {
             throw new Error("ID proizvoda nije validan broj!");
@@ -155,7 +152,6 @@ exports.updateProduct = async (req, res) => {
             brand 
         };
 
-        // Ako je korisnik poslao novu sliku, dodajemo je u upit
         if (req.file) {
             params.image = `products/${req.file.filename}`;
             query += `, p.image = $image`;
@@ -169,10 +165,8 @@ exports.updateProduct = async (req, res) => {
             return res.status(404).json({ error: "Proizvod nije pronađen u bazi!" });
         }
 
-        // 3. Čišćenje Redis keša (opciono, ali preporučljivo)
         try {
             const productRepository = require('../models/redis/productRedis');
-            // Pronađi po imenu i obriši
             const existingInRedis = await productRepository.search().where('name').equals(name).return.first();
             if (existingInRedis) {
                 await productRepository.remove(existingInRedis.entityId);
@@ -181,13 +175,23 @@ exports.updateProduct = async (req, res) => {
             console.log("Redis nije mogao da se očisti, ali baza je ažurirana.");
         }
 
+        const storeResult = await session.run(
+            'MATCH (s:Store)-[:HAS_PRODUCT]->(p:Product) WHERE ID(p) = $id RETURN ID(s) as storeId',
+            { id: numericId }
+        );
+        const storeId = storeResult.records[0]?.get('storeId').toNumber();
+
+        if (storeId) {
+            io.getIO().emit('store_updated', { storeId, action: 'product_updated', productId: numericId });
+        }
+
         res.status(200).json({ 
             message: "Proizvod uspešno ažuriran!", 
             product: result.records[0].get('p').properties 
         });
 
     } catch (error) {
-        console.error("DETALJNA GREŠKA NA SERVERU:", error); // Ovo će ti reći tačno šta ne valja
+        console.error("DETALJNA GREŠKA NA SERVERU:", error); 
         res.status(500).json({ error: "Greška na serveru", detail: error.message });
     }
 };
@@ -198,7 +202,6 @@ exports.deleteProduct = async (req, res) => {
         const { id } = req.params;
         const numericId = parseInt(id);
 
-        // 1. Uzmi ime pre brisanja
         const info = await session.run('MATCH (p:Product) WHERE ID(p) = $id RETURN p.name as name', { id: numericId });
         
         if (info.records.length === 0) {
@@ -206,10 +209,8 @@ exports.deleteProduct = async (req, res) => {
         }
         const productName = info.records[0].get('name');
 
-        // 2. Neo4j brisanje
         await session.run('MATCH (p:Product) WHERE ID(p) = $id DETACH DELETE p', { id: numericId });
 
-        // 3. Redis brisanje - sa zaštitom od nepostojećeg indeksa
         try {
             const redisProduct = await productRepository.search().where('name').equals(productName).return.first();
             if (redisProduct) {
@@ -217,6 +218,16 @@ exports.deleteProduct = async (req, res) => {
             }
         } catch (redisError) {
             console.log("Redis index nije bio spreman, ali proizvod je obrisan iz Neo4j.");
+        }
+
+        const storeResult = await session.run(
+            'MATCH (s:Store)-[:HAS_PRODUCT]->(p:Product) WHERE ID(p) = $id RETURN ID(s) as storeId',
+            { id: numericId }
+        );
+        const storeId = storeResult.records[0]?.get('storeId').toNumber();
+
+        if (storeId) {
+            io.getIO().emit('store_updated', { storeId, action: 'product_deleted', productId: numericId });
         }
 
         res.status(200).json({ message: `Proizvod "${productName}" obrisan.` });
@@ -269,105 +280,10 @@ exports.searchProducts = async (req, res) => {
         res.json(products);
     } catch (error) {
         console.error("Search DB Error:", error);
-        res.status(500).json([]); // Vrati prazan niz umesto da srušiš aplikaciju
+        res.status(500).json([]); 
     }
 };
 
-// 7. SET DISCOUNT
-exports.setDiscount = async (req, res) => {
-    const { amount, productName, storeName } = req.body;
-    const session = req.neo4jSession;
-    const notificationService = require('./notificationController');
-
-    try {
-        // 1. Ažuriramo popust i pronalazimo pratioce
-        const result = await session.run(
-            `MATCH (s:Store {name: $storeName})
-             MATCH (s)-[:OWNS_STORE|:HAS_PRODUCT*1..2]-(p:Product {name: $productName})
-             SET p.discountPrice = $amount
-             WITH s, p
-             MATCH (u:User)-[:FOLLOWS]->(s)
-             RETURN u.id as followerId, s.name as storeName, p.name as productName`,
-            { amount: parseFloat(amount), productName, storeName }
-        );
-
-        // 2. Slanje notifikacija kroz Socket.io
-        if (result.records.length > 0) {
-    result.records.forEach(record => {
-        const followerId = record.get('followerId');
-        
-        // FORMIRAMO OBJEKAT ZA ZVONCE
-        const notificationData = {
-            message: `Akcija! ${productName} u prodavnici ${storeName} je sada ${amount} RSD! 💸`,
-            type: 'price_drop',
-            timestamp: new Date().toISOString()
-        };
-
-        // Šaljemo ga preko servisa
-        notificationService.sendNotification(followerId, notificationData);
-    });
-}
-
-        res.status(200).json({ message: "Notifikacije poslate!" });
-    } catch (error) {
-        console.error("Greška kod popusta:", error);
-        res.status(500).json({ error: error.message });
-    }
-};
-
-// 8. GET BY STORE
-// 8. GET BY STORE (Ažurirana verzija)
-// 8. GET BY STORE - Ispravljena verzija
-exports.getProductsByStoreAndCategory = async (req, res) => {
-    const session = req.neo4jSession;
-    try {
-        const { storeId, categoryId } = req.params;
-        const result = await session.run(
-            `MATCH (s:Store)-[:HAS_PRODUCT]->(p:Product)-[:BELONGS_TO]->(c:Category)
-             WHERE ID(s) = $sId AND ID(c) = $cId
-             RETURN p, ID(p) as id`,
-            { sId: parseInt(storeId), cId: parseInt(categoryId) }
-        );
-
-        const products = result.records.map(record => ({
-            ...record.get('p').properties,
-            id: record.get('id').toNumber()
-        }));
-
-        res.status(200).json(products);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
-exports.getTopProducts = async (req, res) => {
-    const session = req.neo4jSession;
-    try {
-        const result = await session.run(
-            `MATCH (p:Product)
-             OPTIONAL MATCH (:User)-[r:RATED]->(p)
-             OPTIONAL MATCH (:User)-[i:INTERESTED_IN]->(p)
-             WITH p, avg(r.score) AS avgRating, count(i) AS interestCount
-             RETURN p, ID(p) as id, avgRating, interestCount
-             ORDER BY avgRating DESC, interestCount DESC
-             LIMIT 6`
-        );
-
-        const products = result.records.map(record => ({
-            ...record.get('p').properties,
-            id: record.get('id').toNumber(),
-            avgRating: record.get('avgRating') || 0,
-            interestCount: record.get('interestCount').toNumber()
-        }));
-
-        res.status(200).json(products);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
-// PREPORUKA: Na osnovu wishliste, nađi proizvode iz istih kategorija/brendova
-// Primer backend funkcije u Neo4j kontroleru
 exports.getRecommendedProducts = async (req, res) => {
     const { userId } = req.params;
     const session = req.neo4jSession;
@@ -434,30 +350,7 @@ exports.getRecommendedProducts = async (req, res) => {
     }
 };
 
-exports.getFollowedStoresProducts = async (req, res) => {
-    const session = req.neo4jSession;
-    const { userId } = req.params;
-
-    try {
-        const result = await session.run(
-            `MATCH (u:User)-[:FOLLOWS]->(s:Store)-[:OWNS]->(p:Product)
- WHERE ID(u) = $uId
- RETURN p, s.name as storeName, ID(p) as id
- ORDER BY id DESC LIMIT 10`, // Sortiramo po ID-u umesto po datumu 
-            { uId: parseInt(userId) }
-        );
-
-        const products = result.records.map(record => ({
-            ...record.get('p').properties,
-            id: record.get('id').toNumber(),
-            storeName: record.get('storeName')
-        }));
-
-        res.status(200).json(products);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
+// 7. SEARCH HISTORY (Redis) - trebalo je da bude za cuvanje istorije pretrazivanja pomocu tagova
 
 exports.getSearchHistory = async (req, res) => {
     const { userId } = req.params;

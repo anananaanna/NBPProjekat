@@ -2,13 +2,34 @@ const User = require('../models/User');
 const userRepository = require('../models/redis/userRedis');
 const { connection } = require('../database'); 
 const bcrypt = require('bcrypt');
- const storeController = require('./storeController');
+const jwt = require('jsonwebtoken');
+const Joi = require('joi');
+const storeController = require('./storeController');
+const logger = require('../logger');
+
+// Validation 
+const registerSchema = Joi.object({
+    username: Joi.string().min(3).max(30).required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+    role: Joi.string().valid('customer', 'seller').default('customer')
+});
+
+const loginSchema = Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required()
+});
 
 // 1. REGISTRACIJA
 exports.register = async (req, res) => {
     const session = req.neo4jSession; 
     try {
-        const { username, email, password, role } = req.body;
+        const { error, value } = registerSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        const { username, email, password, role } = value;
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -17,10 +38,12 @@ exports.register = async (req, res) => {
             { username, email, password: hashedPassword, role: role || 'customer' }
         );
 
-        // Izmeni kraj registra u userController.js
         const savedUserNode = result.records[0].get('u');
         const savedUser = savedUserNode.properties;
         const userId = savedUserNode.identity.toNumber();
+
+        // Generate JWT
+        const token = jwt.sign({ id: userId, username: savedUser.username, role: savedUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         res.status(201).json({ 
             message: "Korisnik registrovan!", 
@@ -29,9 +52,11 @@ exports.register = async (req, res) => {
                 username: savedUser.username, 
                 email: savedUser.email,
                 role: savedUser.role 
-            } 
+            },
+            token
         });
     } catch (error) {
+        logger.error('Registration error:', error);
         res.status(500).json({ error: error.message });
     }
 };
@@ -40,7 +65,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
     const session = req.neo4jSession;
     try {
-        const { username, password } = req.body;
+        const { error, value } = loginSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
+
+        const { username, password } = value;
 
         const result = await session.run(
             'MATCH (u:User {username: $username}) RETURN u',
@@ -61,17 +91,21 @@ exports.login = async (req, res) => {
         const userId = result.records[0].get('u').identity.toNumber(); 
         delete userProps.password;
 
+        // Generate JWT
+        const token = jwt.sign({ id: userId, username: userProps.username, role: userProps.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
         res.status(200).json({ 
             message: "Uspešan login!", 
-            user: { ...userProps, id: userId } 
+            user: { ...userProps, id: userId },
+            token
         });
     } catch (error) {
+        logger.error('Login error:', error);
         res.status(500).json({ error: error.message });
     }
 };
 
 // 3. UPDATE USER
-// 3. UPDATE USER - Pojednostavljena verzija bez provere trenutne lozinke
 exports.updateUser = async (req, res) => {
     const session = req.neo4jSession;
     try {
@@ -127,26 +161,8 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-// 5. FOLLOW CATEGORY
-exports.followCategory = async (req, res) => {
-    const session = req.neo4jSession;
-    try {
-        const { userId, categoryId } = req.body;
-        await session.run(
-            `MATCH (u:User), (c:Category)
-             WHERE ID(u) = $userId AND ID(c) = $categoryId
-             MERGE (u)-[:INTERESTED_IN]->(c)`,
-            { userId: parseInt(userId), categoryId: parseInt(categoryId) }
-        );
-        res.status(200).json({ message: "Kategorija zapraćena!" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
 
 // 6. FOLLOW STORE - Grafovska veza (:User)-[:FOLLOWS]->(:Store)
-
-// Na backendu u userController.js (ili gde ti je follow logika)
 exports.followStore = async (req, res) => {
     const { userId, storeId } = req.body;
     const session = req.neo4jSession;
@@ -164,7 +180,6 @@ exports.followStore = async (req, res) => {
         );
 
         if (checkRes.records.length > 0) {
-            // --- SEKCIJA: UNFOLLOW ---
             await session.run(
                 `MATCH (u:User)-[r:FOLLOWS]->(s:Store) 
                  WHERE ID(u) = $uId AND ID(s) = $sId 
@@ -172,14 +187,13 @@ exports.followStore = async (req, res) => {
                 { uId: parseInt(userId), sId: parseInt(storeId) }
             );
 
-            // OSVEŽI POPULARNOST: Smanjio se broj pratilaca, rang lista se menja
+            // Smanjio se broj pratilaca, rang lista se menja
             await storeController.updateStorePopularity(storeId, session)
                 .catch(e => console.log("Greška pri ažuriranju popularnosti nakon unfollow:", e));
 
             return res.status(200).json({ isFollowing: false });
 
         } else {
-            // --- SEKCIJA: FOLLOW ---
             const result = await session.run(
                 `MATCH (u:User) WHERE ID(u) = $uId
                  MATCH (s:Store) WHERE ID(s) = $sId
@@ -207,7 +221,6 @@ exports.followStore = async (req, res) => {
                     );
                 }
 
-                // KLJUČNI DEO: Osveži Redis i pošalji Socket signal SVIMA na Home stranici
                 await storeController.updateStorePopularity(storeId, session)
                     .catch(e => console.log("Greška pri ažuriranju popularnosti nakon follow:", e));
 
@@ -223,7 +236,6 @@ exports.followStore = async (req, res) => {
     }
 };
 
-// 7. ADD TO WISHLIST
 // 7. ADD TO WISHLIST
 exports.addToWishlist = async (req, res) => {
     const session = req.neo4jSession;
@@ -241,7 +253,6 @@ exports.addToWishlist = async (req, res) => {
 
         console.log("Dodajem u Wishlist:", { userId, productId });
 
-        // FIKSIRAN UPIT: Dodat alias za v u OPTIONAL MATCH-u da ne puca
         const result = await session.run(
             `MATCH (u:User) WHERE ID(u) = $userId
              MATCH (p:Product) WHERE ID(p) = $productId
@@ -252,13 +263,12 @@ exports.addToWishlist = async (req, res) => {
             { userId, productId }
         );
 
-        // KLJUČ: Čišćenje Redisa - OVO JE REŠENJE TVOG PROBLEMA
+        // Ciscenje redisa
         if (connection) {
             await connection.del(`wishlist:${userId}`);
             console.log("Redis keš obrisan.");
         }
 
-        // Provera notifikacija - bezbedno izvlačenje vendorId
         if (result.records.length > 0) {
             const row = result.records[0];
             const vendorIdRaw = row.get('vendorId');
@@ -305,13 +315,12 @@ exports.removeFromWishlist = async (req, res) => {
 
 // 9. GET WISHLIST
 exports.getWishlist = async (req, res) => {
-    const userId = parseInt(req.params.userId); // MORA BITI BROJ
+    const userId = parseInt(req.params.userId); 
     const cacheKey = `wishlist:${userId}`;
     const { connection } = require('../database');
     const session = req.neo4jSession;
 
     try {
-        // 1. Provera Redisa
         if (connection) {
             const cachedData = await connection.get(cacheKey);
             if (cachedData) {
@@ -320,7 +329,6 @@ exports.getWishlist = async (req, res) => {
             }
         }
 
-        // 2. Neo4j - PAZI NA QUERIES
         console.log(">>> IZ NEO4J");
         const result = await session.run(
             `MATCH (u:User)-[:INTERESTED_IN]->(p:Product)
@@ -334,7 +342,6 @@ exports.getWishlist = async (req, res) => {
             id: record.get('prodId').toNumber()
         }));
 
-        // 3. Upis u Redis samo ako ima nešto
         if (wishlist.length > 0 && connection) {
             await connection.set(cacheKey, JSON.stringify(wishlist), { EX: 300 });
         }

@@ -4,7 +4,6 @@ const productController = require('../controllers/productController');
 const multer = require('multer');
 const path = require('path');
 
-// Konfiguracija za čuvanje slika na tvom disku
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         // Ako u ruti ili polju prepoznamo o čemu se radi, šaljemo u podfolder
@@ -31,8 +30,6 @@ router.put('/update', upload.single('image'), productController.updateProduct);
 router.delete('/delete/:id', productController.deleteProduct);
 router.post('/link-store', productController.linkProductToStore);
 router.get('/search', productController.searchProducts);
-router.post('/set-discount', productController.setDiscount);
-router.get('/store/:storeId', productController.getProductsByStoreAndCategory);
 router.get('/recommended/:userId', productController.getRecommendedProducts);
 router.post('/search-history', productController.saveSearchHistory);
 router.get('/search-history/:userId', productController.getSearchHistory);

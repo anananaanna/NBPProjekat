@@ -9,7 +9,6 @@ export const userService = {
         const response = await axios.post('/user/register', userData);
         return response.data;
     },
-    // Izmeni '/user/update' u '/user/update-profile'
 updateUser: (data) => axios.put('/user/update-profile', data),
     getWishlist: (userId) => axios.get(`/user/wishlist/${userId}`),
     addToWishlist: (data) => axios.post('/user/wishlist/add', data),
@@ -21,7 +20,6 @@ export const productService = {
     getAllProducts: () => axios.get('/product/all'),
     getProductById: (id) => axios.get(`/product/${id}`),
     
-    // REDIS: Čuvanje istorije pretrage u listi
     searchProducts: async (query, userId) => {
         if (userId && query) {
             await axios.post('/product/search-history', { userId, query });
@@ -31,10 +29,8 @@ export const productService = {
 
     getSearchHistory: (userId) => axios.get(`/product/search-history/${userId}`),
 
-    // NEO4J: Napredne preporuke (Collaborative Filtering)
     getRecommendedProducts: (userId) => axios.get(`/product/recommended/${userId}`),
     
-    // Proizvodi iz prodavnica koje korisnik prati
     getFollowedProducts: (userId) => axios.get(`/product/followed/${userId}`),
 
     getTopProducts: () => axios.get('/product/top'), 
@@ -64,16 +60,12 @@ updateProduct: (formData) => {
 export const storeService = {
     getAllStores: () => axios.get('/store/all'),
     
-    // Svaki poziv ove metode na backendu sada hrani Redis "trending" listu
     getStoreById: (id, userId) => {
-    // Ako imamo userId šaljemo ga kao query parametar, ako nemamo šaljemo samo ID
     const url = userId ? `/store/${id}?userId=${userId}` : `/store/${id}`;
     return axios.get(url);},
 
-    // REDIS: Dohvatanje top 3 trending prodavnice iz Redis Sorted Seta
     getTop3Stores: () => axios.get('/store/trending/top'),
 
-    // NEO4J: Predložene prodavnice na osnovu sličnih korisnika
     getSuggestedStores: (userId) => axios.get(`/store/suggested/${userId}`),
 
     getStoreCategories: (storeId) => axios.get(`/store/${storeId}/categories`),
@@ -86,11 +78,11 @@ export const storeService = {
     updateStore: (storeData) => axios.put('/store/update', storeData),
     deleteStore: (id) => axios.delete(`/store/delete/${id}`),
 
-    // Interakcije
+
     addStoreRating: (data) => axios.post('/rating/add', data),
     addStoreComment: (data) => axios.post('/comment/add', data),
     getStoreComments: (storeId) => axios.get(`/comment/store/${storeId}`),
-    // apiService.js (proveri ovo!)
+
 getUserRating: (userId, storeId) => api.get(`/rating/user/${userId}/store/${storeId}`),
 };
 
@@ -112,7 +104,6 @@ export const commentService = {
 };
 
 export const notificationService = {
-    // Koristimo direktno axios, baš kao i u userService ili productService
     getNotifications: (userId) => axios.get(`/notifications/${userId}`),
     clearNotifications: (userId) => axios.delete(`/notifications/${userId}`),
     markAsRead: (userId) => axios.put(`/notifications/${userId}/mark-as-read`),

@@ -1,101 +1,72 @@
-Uputstvo za pokretanje projekta
-Korak 1: Priprema baza podataka
-Neo4j: Pokrenite Neo4j Desktop, kreirajte bazu i obavezno instalirajte APOC plugin (potreban za napredne upite).
+Backend postavka
 
-Redis: Osigurajte da je Redis server pokrenut (podrazumevani port 6379).
-
-Korak 2: Konfiguracija Backenda
-Uđite u backend folder.
-
-Pokrenite instalaciju svih zavisnosti:
+Otvorite terminal u korenu projekta:
 
 Bash
-npm install
-Kreirajte .env fajl u korenu backend-a i popunite svoje podatke:
-
-PORT=3001gi
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=vasa_lozinka
-REDIS_URL=redis://localhost:6379
-VAŽNO (Slike): Ukoliko ne postoje, ručno kreirajte foldere:
-
-backend/uploads/products
-
-backend/uploads/stores
-
-Pokrenite server:
-
-Bash
-npm start
-Korak 3: Konfiguracija Frontenda
-Uđite u frontend folder.
-
-Instalirajte sve pakete:
-
-Bash
-npm install
-Pokrenite aplikaciju:
-
-Bash
-npm start
-Baza Podataka
-U korenu projekta nalazi se fajl baza.txt. Potrebno je kopirati sadržaj tog fajla u Neo4j Browser i pokrenuti ga. To će kreirati:
-
-Korisnike: Prodavac (Vendor) i 5 kupaca.
-
-Prodavnice: HomeDecor, TechZone, Urban Style, Costco.
-
-Proizvode: Povezane sa kategorijama i prodavnicama.
-
-Relacije: Zapraćene prodavnice, wishliste i početne ocene kako bi algoritam za preporuke (Collaborative Filtering) mogao odmah da se testira.
-
-1. Instalacija u BACKEND folderu
-Otvori terminal, uđi u backend folder i kucaj ove komande jednu po jednu (ili sve odjednom):
-
-Bash
-# Ulazak u folder
 cd backend
+npm install
 
-# Instalacija Express-a i osnovnih alata
+Zavisnosti koje se instaliraju: 
+- Instalacija Express-a i osnovnih alata
 npm install express cors dotenv nodemon
-
-# Instalacija drajvera za baze podataka
+- Instalacija drajvera za baze podataka
 npm install neo4j-driver redis redis-om
-
-# Instalacija za upload slika i rad sa putanjama
+- Instalacija za upload slika i rad sa putanjama
 npm install multer path
-
-# Instalacija za real-time notifikacije (Socket.io)
+- Instalacija za real-time notifikacije (Socket.io)
 npm install socket.io
 
-2. Instalacija u FRONTEND folderu
-Otvori novi terminal (ili ugasi prethodni), uđi u frontend folder i kucaj:
+Konfiguracija environment fajla:
+
+U backend folderu kreirajte fajl .env i unesite:
+PORT=3001
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=password123
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your_super_secret_jwt_key_here
+
+
+Client (Frontend) postavka
+
+Otvorite novi terminal:
 
 Bash
-# Ulazak u folder
 cd client
+npm install
 
-# Instalacija React Router-a za navigaciju
+Zavisnosti:
+- Instalacija React Router-a za navigaciju
 npm install react-router-dom
-
-# Instalacija Axios-a za komunikaciju sa API-jem
+- Instalacija Axios-a za komunikaciju sa API-jem
 npm install axios
-
-# Instalacija klijenta za notifikacije
+- Instalacija klijenta za notifikacije
 npm install socket.io-client
-
-# Instalacija ikonica (ako ih koristiš, npr. Lucide)
+- Instalacija ikonica (ako ih koristiš, npr. Lucide)
 npm install lucide-react
 
-Aplikacija je izgrađena na modernom sistemu koji kombinuje prednosti grafovske baze, brzog keširanja i komunikacije u realnom vremenu.
 
-Logika preporuka (Collaborative Filtering): Algoritam "Preporučeno za vas" ne prikazuje nasumične proizvode. Sistem prati korisnike koji u listi želja (WISHES) imaju iste proizvode. Ako korisnik A i korisnik B oboje žele "Galaxy S22", sistem korisniku A preporučuje ostale artikle iz liste želja korisnika B (npr. "Farmerice"), jer graf sugeriše da imaju sličan ukus.
+Dockerizacija (Docker Desktop):
 
-Top 3 Prodavnice: Na početnoj strani se prikazuju 3 najpopularnije prodavnice. Popularnost se računa u Neo4j (kombinacija ocene i broja pratilaca), ali se rezultat čuva u Redisu. Time se izbegava teško računanje pri svakom osvežavanju stranice.
+Redis container:
+docker run -d --name redis_project -p 6379:6379 redis:latest
 
-Keširanje kategorija: Lista kategorija se povlači iz Redisa, što ubrzava učitavanje prodavnice.
+Neo4j container:
+docker run -d \
+    --name neo4j_project \
+    -p 7474:7474 -p 7687:7687 \
+    -e NEO4J_AUTH=neo4j/password123 \
+    -e NEO4JLABS_PLUGINS='["apoc"]' \
+    neo4j:latest
 
-Sistem omogućava trenutno obaveštavanje korisnika bez potrebe za osvežavanjem stranice.
 
-Notifikacije: Stižu kada neko zaprati prodavnicu, doda proizvod u listu želja ili kada prodavac stavi na popust artikal koji se nalazi u kupčevoj listi želja.
+Pokretanje aplikacije:
+
+Backend:
+U backend folderu: npm start (server sluša na portu 3001).
+
+Frontend:
+U client folderu: npm start (aplikacija se otvara na localhost:3000).
+
+Inicijalizacija podataka:
+Otvorite Neo4j Browser, iskopirajte sadržaj fajla baza.txt i pokrenite ga.

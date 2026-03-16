@@ -24,8 +24,10 @@ const ProductCard = ({ product, isWishlist, onRemove, showStore }) => {
 
     const [isInWishlistLocal, setIsInWishlistLocal] = useState(() => {
         if (isWishlist) return true;
-        const saved = localStorage.getItem(`wishlist_${actualProductId}`);
-        return saved === 'true';
+        if (!isAuthenticated) return false; 
+    
+    const saved = localStorage.getItem(`wishlist_${actualProductId}`);
+    return saved === 'true';
     });
 
     useEffect(() => {
@@ -85,7 +87,6 @@ const ProductCard = ({ product, isWishlist, onRemove, showStore }) => {
             onClick={() => navigate(`/product/${actualProductId}`)}
         >
             <div style={styles.imageContainer}>
-                {/* POPRAVLJEN BADGE: Koristi discountPrice kao u starom kodu */}
                 {product.discountPrice && (
                     <div style={styles.badge}>
                         -{Math.round((1 - product.discountPrice / product.price) * 100)}%
@@ -99,8 +100,20 @@ const ProductCard = ({ product, isWishlist, onRemove, showStore }) => {
                     onError={(e) => { e.target.src = 'https://via.placeholder.com/300x400'; }} 
                 />
                 
-                {(user?.user?.role !== 'vendor' && user?.role !== 'vendor') && (
-                    <button onClick={handleWishlistAction} style={styles.wishlistIconBtn}>
+                {(user?.user?.role !== 'seller' && user?.role !== 'seller') && (
+                    <button 
+            onClick={(e) => {
+                if (!isAuthenticated) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert("Moraš se prijaviti kao kupac da bi dodao proizvod u listu želja!");
+                    navigate('/login');
+                } else {
+                    handleWishlistAction(e);
+                }
+            }} 
+            style={styles.wishlistIconBtn}
+        >
                         <svg width="22" height="22" viewBox="0 0 24 24" 
                              fill={isInWishlistLocal ? "#ff4757" : "none"} 
                              stroke={isInWishlistLocal ? "#ff4757" : "#000"} 
@@ -112,13 +125,11 @@ const ProductCard = ({ product, isWishlist, onRemove, showStore }) => {
             </div>
             
             <div style={styles.content}>
-                {/* PRIKAZ BRENDA: Kao u starom kodu */}
                 <p style={styles.brand}>{product.brand || "Nepoznat brend"}</p>
                 
                 <h3 style={styles.title}>{product.name}</h3>
                 
                 <div style={styles.priceContainer}>
-                    {/* POPRAVLJENE CENE: Koristi discountPrice */}
                     {product.discountPrice ? (
                         <>
                             <span style={styles.newPrice}>{product.discountPrice} RSD</span>

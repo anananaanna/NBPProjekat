@@ -1,9 +1,6 @@
 const Store = require('../models/Store');
 const storeRepository = require('../models/redis/storeRedis');
-const io = require('../socket'); // Dodato za real-time notifikacije
-const { redis_client } = require('../database'); // Proveri da li se odavde uvozi klijent
-//const socketIO = require('../socket'); // tvoj socket.js
-
+const { redis_client } = require('../database'); 
 
 // 1. CREATE
 exports.createStore = async (req, res) => {
@@ -32,7 +29,6 @@ exports.createStore = async (req, res) => {
             return res.status(404).json({ error: "Korisnik (Vendor) nije pronađen." });
         }
 
-        // --- OVO JE KLJUČNO: Brišemo Redis keš da bi Dashboard video novu prodavnicu ---
         try {
             await storeRepository.dropIndex();
         } catch (e) {
@@ -50,7 +46,7 @@ exports.createStore = async (req, res) => {
 exports.updateStore = async (req, res) => {
     const session = req.neo4jSession;
     try {
-        const { id, name, city, address } = req.body; // Dodata adresa
+        const { id, name, city, address } = req.body;
         const numericId = parseInt(id);
 
         let query = `MATCH (s:Store) WHERE ID(s) = $id 
@@ -73,7 +69,6 @@ exports.updateStore = async (req, res) => {
             return res.status(404).json({ error: "Prodavnica nije pronađena!" });
         }
 
-        // --- ČIŠĆENJE REDIS KEŠA ---
         try {
             await storeRepository.dropIndex().catch(() => {});
             console.log("Redis keš očišćen nakon ažuriranja prodavnice.");
@@ -87,15 +82,12 @@ exports.updateStore = async (req, res) => {
 };
 
 // 4. GET BY ID
-// BACKEND: storeController.js
-// 4. GET BY ID (Popravljena verzija)
 exports.getStoreById = async (req, res) => {
     const session = req.neo4jSession;
     try {
         const { id } = req.params;
         const { userId } = req.query;
 
-        // IZMENJEN UPIT: Dodat "allFollowers" koji broji sve veze ka prodavnici
         const result = await session.run(
             `MATCH (s:Store) WHERE ID(s) = $id
              OPTIONAL MATCH (anyUser:User)-[r:RATED]->(s)
@@ -123,11 +115,10 @@ exports.getStoreById = async (req, res) => {
             ...storeProps,
             averageRating: avgRating !== null ? parseFloat(avgRating.toFixed(1)) : 0,
             ratingCount: record.get('ratingCount').toNumber(),
-            followers: record.get('followersCount').toNumber(), // OVO ŠALJEMO FRONTENDU
+            followers: record.get('followersCount').toNumber(), 
             isFollowing: record.get('isFollowing')
         };
 
-        // --- SIGURAN REDIS POZIV ---
         try {
             if (global.redis_client && global.redis_client.isOpen) {
                 // await redis_client.zIncrBy('trending_stores', 1, `Store:${store.id}:${store.name}`);
@@ -135,7 +126,6 @@ exports.getStoreById = async (req, res) => {
         } catch (redisErr) {
             console.warn("Redis Trending Error (Ignored):", redisErr.message);
         }
-        // ---------------------------
 
         res.json(store);
     } catch (error) {
@@ -234,9 +224,9 @@ exports.addProductToDiscount = async (req, res) => {
             const pName = reg.get('productName');
             const sName = reg.get('storeName');
 
-            io.getIO().to(`user:${userId}`).emit('notification', {
-                message: `Akcija! ${pName} u radnji ${sName} je sada ${discountPrice} RSD!`
-            });
+            // io.getIO().to(`user:${userId}`).emit('notification', {
+            //     message: `Akcija! ${pName} u radnji ${sName} je sada ${discountPrice} RSD!`
+            // });
         });
 
         res.status(200).json({ 
@@ -271,7 +261,6 @@ exports.getStoreCategories = async (req, res) => {
     }
 };
 
-// DODAJ OVO U storeController.js
 exports.getStoreProducts = async (req, res) => {
     const session = req.neo4jSession;
     try {
@@ -302,10 +291,6 @@ exports.deleteStore = async (req, res) => {
         const { id } = req.params;
         const numericId = parseInt(id);
 
-        // Cypher upit koji briše:
-        // 1. Sve proizvode (p) koji su povezani sa prodavnicom (s)
-        // 2. Sve njihove relacije (DETACH)
-        // 3. Na kraju samu prodavnicu (s)
         await session.run(
             `MATCH (s:Store) WHERE ID(s) = $id
              OPTIONAL MATCH (s)-[:HAS_PRODUCT]->(p:Product)
@@ -313,10 +298,8 @@ exports.deleteStore = async (req, res) => {
             { id: numericId }
         );
 
-        // --- ČIŠĆENJE REDIS KEŠA ---
         try {
             await storeRepository.dropIndex().catch(() => {});
-            // Ovde bi idealno bilo obrisati i keš za proizvode jer su i oni obrisani
             // await productRepository.dropIndex().catch(() => {}); 
         } catch (e) { console.log("Redis error ignored"); }
 
@@ -358,7 +341,6 @@ exports.getTop3Stores = async (req, res) => {
         const result = await session.run(query);
         
         const topStores = result.records.map(record => {
-            // Bezbedno izvlačenje ID-ja bez obzira da li je Integer ili Number
             const rawId = record.get('storeId');
             const id = (rawId && rawId.toNumber) ? rawId.toNumber() : rawId;
 
@@ -378,11 +360,6 @@ exports.getTop3Stores = async (req, res) => {
     }
 };
 
-// Funkcija koja sračunava popularnost i osvežava Redis Top 3
-// storeController.js
-
-// storeController.js
-
 exports.updateStorePopularity = async (storeId, session) => {
     const { connection } = require('../database');
     const socketModule = require('../socket');
@@ -391,28 +368,41 @@ exports.updateStorePopularity = async (storeId, session) => {
     try {
         console.log("Sistem: Pokrećem TOTALNI RE-RANK svih prodavnica...");
 
-        // 1. GADJAMO SVE PRODAVNICE IZ BAZE (ne samo jednu!)
-        // Ovo garantuje da će Maxi (koji "ćuti") ostati na svom mestu
         const result = await session.run(
             `MATCH (s:Store)
-             OPTIONAL MATCH ()-[f:FOLLOWS]->(s)
-             OPTIONAL MATCH ()-[r:RATED]->(s)
-             WITH s, count(DISTINCT f) as followers, avg(r.score) as rating
-             RETURN ID(s) as id, s.name as name, followers, rating, 
-                    (followers + (coalesce(rating, 0) * 5)) as score
-             ORDER BY score DESC LIMIT 10`
+OPTIONAL MATCH (u:User)-[:FOLLOWS]->(s)
+OPTIONAL MATCH (:User)-[r:RATED]->(s)
+
+WITH s,
+     count(DISTINCT u) as followersCount,
+     count(DISTINCT r) as ratingCount,
+     avg(r.score) as avgRating
+
+WITH s,
+     followersCount,
+     ratingCount,
+     coalesce(avgRating,0.0) as averageRating,
+     (ratingCount * (coalesce(avgRating,0.0) * coalesce(avgRating,0.0))) +
+     (followersCount * 2.0) as popularityScore
+
+RETURN ID(s) as id,
+       s.name as name,
+       followersCount as followers,
+       averageRating as avgRating,
+       popularityScore as score
+ORDER BY score DESC
+LIMIT 10`
         );
 
         const stores = result.records.map(r => ({
-            id: r.get('id').toNumber(),
-            name: r.get('name'),
-            followers: r.get('followers').toNumber(),
-            avgRating: parseFloat((r.get('rating') || 0).toFixed(1)),
-            score: parseFloat(r.get('score'))
-        }));
+    id: r.get('id').toNumber(),
+    name: r.get('name'),
+    followers: r.get('followers').toNumber(),
+    avgRating: parseFloat(r.get('avgRating') || 0),
+    score: parseFloat(r.get('score'))
+}));
 
         if (connection && connection.isOpen) {
-            // 2. KLJUČ: Brišemo ceo stari set jer je on izvor greške
             await connection.del('top_stores');
 
             // 3. Punimo Redis sa top 10 najsvežijih rezultata
@@ -430,12 +420,17 @@ exports.updateStorePopularity = async (storeId, session) => {
             }
 
             // 4. Uzimamo finalnih TOP 3
-            const topRaw = await connection.zRange('top_stores', 0, 2, { REV: true });
-            const top3 = topRaw.map(item => JSON.parse(item));
+            const topRaw = await connection.zRangeWithScores('top_stores', 0, 2, { REV: true });
+
+const top3 = topRaw
+    .map(item => ({
+        ...JSON.parse(item.value),
+        score: item.score
+    }))
+    .sort((a, b) => b.score - a.score); 
 
             console.log("REAL-TIME RE-RANK USPEŠAN. Šaljem top 3:", top3.map(t => t.name));
             
-            // Emitujemo SVE tri prodavnice
             io.emit("update_top_3", top3);
         }
     } catch (err) {
@@ -443,27 +438,3 @@ exports.updateStorePopularity = async (storeId, session) => {
     }
 };
 
-exports.getSuggestedStores = async (req, res) => {
-    const session = req.neo4jSession;
-    const { userId } = req.params;
-
-    try {
-        // Cypher logika: Pronađi ljude koji prate iste kategorije/proizvode kao ti,
-        // i vidi koje prodavnice oni prate, a ti još uvek ne.
-        const query = `
-            MATCH (u:User)-[:WISHES]->(p:Product)<-[:WISHES]-(other:User)
-            WHERE ID(u) = $userId AND u <> other
-            MATCH (other)-[:FOLLOWS]->(suggestedStore:Store)
-            WHERE NOT (u)-[:FOLLOWS]->(suggestedStore)
-            RETURN DISTINCT suggestedStore, ID(suggestedStore) as id LIMIT 3
-        `;
-        const result = await session.run(query, { userId: parseInt(userId) });
-        const stores = result.records.map(r => ({
-            id: r.get('id').low,
-            ...r.get('suggestedStore').properties
-        }));
-        res.json(stores);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};

@@ -37,7 +37,6 @@ const Recommended = () => {
         fetchRecommended();
     }, [isAuthenticated, userId]);
 
-    // Logika za paginaciju
     const indexOfLastProduct = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
     const currentProducts = recommended.slice(indexOfFirstProduct, indexOfLastProduct);
@@ -97,7 +96,6 @@ const Recommended = () => {
                             </div>
                         )}
 
-                        {/* Explore More Dugme */}
                         <div className="explore-more-container">
                             <button 
                                 className="explore-btn" 
